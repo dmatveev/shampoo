@@ -1,0 +1,9 @@
+<package>
+  <name>Shampoo</name>
+  <prereq>TCP</prereq>
+  <namespace>Shampoo</namespace>
+
+  <filein>server.st</filein>
+
+  <file>server.st</file>
+</package>
