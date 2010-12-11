@@ -1,0 +1,300 @@
+Shampoo XML protocol description
+
+Dmitry Matveev, 11 Dec 2010
+
+* Overview
+
+Shampoo-XML is a protocol for remote Smalltalk image control. It provides a set
+of commands that allow...
+  - to get a list of namespaces;
+  - to get a list of classes in namespace;
+  - to get a list of methods in class (instance side or class side);
+  - to register a new class with the supplied description (comment, instance/class
+    variable names, etc);
+  - to remove a class;
+  - to get a source string of a concrete method in a concrete class;
+  - to compile a supplied source string for a concrete method in a concrete class.
+
+Shampo is functioning in a request/response server. Client sends a request to
+the server and server replies with a response. Server will not send anything
+to the client without an appropriate request.
+
+* Basics
+
+** Request structure
+
+  <request
+    id=...          (1)
+    type=...        (2)
+    ...>            
+      <...>         (3)
+  </request>
+
+  OR
+
+  <request id=... type=... ... />
+
+ID (1) is a numeric value showing the number of the request in the sequence. When
+client sends a request with some ID, server should respond with a response of the
+same ID.
+
+TYPE (2) identifies a type of a message (see Requests). TYPE determines what
+will be included into the body of a request (3).
+
+** Response structure
+
+  <response
+    id=...          (1)
+    type=...        (2)
+    ...>
+      <...>         (3)
+  </response>
+
+  <response id=... type=... ... />
+
+The response structure is similar to a request structure. Response ID (1) must
+always match the appropriate request ID, and the response body (3) is determined
+by response type (2).
+  
+* Requests
+
+** Namespaces
+
+*** Description
+Ask server to send us a list of all the available namespaces in the image
+
+*** Syntax
+
+  <request id="23" type="Namespaces" />
+
+*** Response
+See Namespaces
+
+** Classes
+
+*** Description
+Ask server to send us a list of all the classes in the concrete namespace
+
+*** Syntax
+
+  <request id="10" type="Classes" namespace="SomeNamespace" />
+
+*** Response
+See Classes
+
+** Class
+
+*** Description
+Ask server to send us a class description
+
+*** Syntax
+
+  <request id="15" type="Class" class="ConcreteClass" />
+
+*** Response
+See Class
+
+** Categories
+
+*** Description
+Ask server to send us a list of all the method categories in the concrete class
+
+*** Syntax
+
+  <request id="500" type="Categories" class="SomeClass" side="instance" />
+
+  SIDE option may have two possible values:
+  - "instance" - enumerate categories for the instance-side methods of a class;
+  - "class"    - the same for the class side.
+
+*** Response
+See Categories
+
+** Methods
+
+*** Description
+Ask server to send us a list of all the methods of the concrete category in the
+concrete class.
+
+*** Syntax
+
+  <request id="500
+    type="Methods"
+    class="SomeClass"
+    side="instance"
+    category="some category"
+  />
+
+  SIDE option may have two possible values:
+  - "instance" - enumerate categories for the instance-side methods of a class;
+  - "class"    - the same for the class side.
+
+  CATEGORY option value should exist in the list of categories obtained from
+  Categories message.
+
+*** Response
+See Methods
+
+** MethodSource
+
+*** Description
+Ask server to send us a source code stirng for a specified method. Method should exist
+in the class.
+
+*** Syntax
+    
+  <request
+    id="123"
+    type="MethodSource"
+    class="SomeClass"
+    side="instance"
+    method="method name"
+  />
+    
+*** Response
+See MethodSource
+
+** CompileClass
+
+*** Description
+Compile a new class. Or recompile it, if a class is already exist.
+
+*** Syntax
+
+  <request id="80" type="CompileClass" class="SomeClass">
+      <instvar name="one" />
+      <instvar name="two />
+      <instvar name="three />
+  </request>
+
+Instance variables must be registered in the class in the order specified by message.
+
+*** TODO add class variables in the request
+
+*** Response
+See OperationalResoponse
+
+** CompileMethod
+
+*** Description
+Ask server to compile a string of code to the specified class.
+
+*** Syntax
+
+  <request id="80" type="CompileMethod" class="SomeClass" side="instance">
+    sampleCompare: anInteger with: anotherInteger [
+        ^ anInteger &gt; anotherInteger
+    ]
+  </request>
+
+To preserve XML parser from going crazy, all suspicious symbols (such as &, >, <
+and others) must be escaped before sending (to &amp; &lt; &gt; etc).
+
+*** Response
+See OperationalResponse
+
+** TODO RemoveClass
+
+** TODO RemoveMethod
+
+* Responses
+
+** OperationalResponse
+
+*** Description
+OperationalResponse is a generic response from a server that indicates success of failure.
+
+*** Syntax
+
+  <response id="80" type="OperationalResponse" status="success" />
+
+STATUS can be "success" or "fail".
+
+** Namespaces
+
+*** Description
+The list of all available namespaces.
+
+*** Syntax
+
+  <response id="23" type="Namespaces">
+      <namespace name="CSymbols />
+      <namespace name="Kernel" />
+      ...
+  </response>
+
+*** TODO subspaces
+
+** Classes
+
+*** Description
+The list of all available classes in the namespace.
+
+*** Syntax
+
+  <response id="67" type="Classes">
+      <clas name="Object" />
+      <clas name="SmallInteger" />
+      ...
+  </response>
+
+** Class
+
+*** Description
+A class description.
+
+*** Syntax
+
+  <response id="80" type="Class" class="SomeClass">
+      <instvar name="one" />
+      <instvar name="two />
+      <instvar name="three />
+  </response>
+
+Almost exactly matches CompileClass request.
+
+** Categories
+
+*** Description
+The list of all available categories for a concrete class.
+
+*** Syntax
+
+  <response id="90" type="Categories">
+      <category name="private" />
+      <category name="accessors" />
+      ...
+  </response>
+
+** Methods
+
+*** Description
+The list of all available methods in a concrete category for a concrete class.
+
+*** Syntax
+
+  <response
+    id="100"
+    type="Methods">
+      <category name="do:" />
+      <category name="inject:into:" />
+      ...
+  </response>
+
+** MethodSource
+
+*** Description
+A source string for a concrete method in a concrete class.
+
+*** Syntax
+
+  <response id="100" type="MethodSource" class="SomeClass" method="someMethod">
+      someMethod [
+          ^100 factorial
+      ]
+  </response>
+
+As for CompileMethod request, to preserve XML parser from being broken, all
+suspicious symbols (such as &, >, < and others) must be escaped before
+sending (to &amp; &lt; &gt; etc).
+
