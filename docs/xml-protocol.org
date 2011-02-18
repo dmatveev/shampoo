@@ -23,16 +23,20 @@ to the client without an appropriate request.
 
 ** Request structure
 
+#+BEGIN_EXAMPLE
   <request
     id=...          (1)
     type=...        (2)
     ...>            
       <...>         (3)
   </request>
+#+END_EXAMPLE
 
   OR
 
+#+BEGIN_EXAMPLE
   <request id=... type=... ... />
+#+END_EXAMPLE
 
 ID (1) is a numeric value showing the number of the request in the sequence. When
 client sends a request with some ID, server should respond with a response of the
@@ -43,6 +47,7 @@ will be included into the body of a request (3).
 
 ** Response structure
 
+#+BEGIN_EXAMPLE
   <response
     id=...          (1)
     type=...        (2)
@@ -50,7 +55,9 @@ will be included into the body of a request (3).
       <...>         (3)
   </response>
 
+#+BEGIN_EXAMPLE
   <response id=... type=... ... />
+#+END_EXAMPLE
 
 The response structure is similar to a request structure. Response ID (1) must
 always match the appropriate request ID, and the response body (3) is determined
@@ -65,10 +72,12 @@ Ask server to send us a list of all the available namespaces in the image
 
 *** Syntax
 
+#+BEGIN_EXAMPLE
   <request id="23" type="Namespaces" />
+#+END_EXAMPLE
 
 *** Response
-See Namespaces
+See *Namespaces*
 
 ** Classes
 
@@ -77,10 +86,12 @@ Ask server to send us a list of all the classes in the concrete namespace
 
 *** Syntax
 
+#+BEGIN_EXAMPLE
   <request id="10" type="Classes" namespace="SomeNamespace" />
+#+END_EXAMPLE
 
 *** Response
-See Classes
+See *Classes*
 
 ** Class
 
@@ -89,10 +100,12 @@ Ask server to send us a class description
 
 *** Syntax
 
+#+BEGIN_EXAMPLE
   <request id="15" type="Class" class="ConcreteClass" />
+#+END_EXAMPLE
 
 *** Response
-See Class
+See *Class*
 
 ** Categories
 
@@ -101,14 +114,16 @@ Ask server to send us a list of all the method categories in the concrete class
 
 *** Syntax
 
+#+BEGIN_EXAMPLE
   <request id="500" type="Categories" class="SomeClass" side="instance" />
+#+END_EXAMPLE
 
   SIDE option may have two possible values:
   - "instance" - enumerate categories for the instance-side methods of a class;
   - "class"    - the same for the class side.
 
 *** Response
-See Categories
+See *Categories*
 
 ** Methods
 
@@ -118,12 +133,14 @@ concrete class.
 
 *** Syntax
 
+#+BEGIN_EXAMPLE
   <request id="500
     type="Methods"
     class="SomeClass"
     side="instance"
     category="some category"
   />
+#+END_EXAMPLE
 
   SIDE option may have two possible values:
   - "instance" - enumerate categories for the instance-side methods of a class;
@@ -133,7 +150,7 @@ concrete class.
   Categories message.
 
 *** Response
-See Methods
+See *Methods*
 
 ** MethodSource
 
@@ -142,7 +159,8 @@ Ask server to send us a source code stirng for a specified method. Method should
 in the class.
 
 *** Syntax
-    
+
+#+BEGIN_EXAMPLE    
   <request
     id="123"
     type="MethodSource"
@@ -150,9 +168,10 @@ in the class.
     side="instance"
     method="method name"
   />
+#+END_EXAMPLE
     
 *** Response
-See MethodSource
+See *MethodSource*
 
 ** CompileClass
 
@@ -161,18 +180,20 @@ Compile a new class. Or recompile it, if a class is already exist.
 
 *** Syntax
 
+#+BEGIN_EXAMPLE
   <request id="80" type="CompileClass" class="SomeClass">
       <instvar name="one" />
       <instvar name="two />
       <instvar name="three />
   </request>
+#+END_EXAMPLE
 
 Instance variables must be registered in the class in the order specified by message.
 
 *** TODO add class variables in the request
 
 *** Response
-See OperationalResoponse
+See *OperationalResoponse*
 
 ** CompileMethod
 
@@ -181,17 +202,19 @@ Ask server to compile a string of code to the specified class.
 
 *** Syntax
 
+#+BEGIN_EXAMPLE
   <request id="80" type="CompileMethod" class="SomeClass" side="instance">
     sampleCompare: anInteger with: anotherInteger [
         ^ anInteger &gt; anotherInteger
     ]
   </request>
+#+END_EXAMPLE
 
 To preserve XML parser from going crazy, all suspicious symbols (such as &, >, <
 and others) must be escaped before sending (to &amp; &lt; &gt; etc).
 
 *** Response
-See OperationalResponse
+See *OperationalResponse*
 
 ** TODO RemoveClass
 
@@ -206,7 +229,9 @@ OperationalResponse is a generic response from a server that indicates success o
 
 *** Syntax
 
+#+BEGIN_EXAMPLE
   <response id="80" type="OperationalResponse" status="success" />
+#+END_EXAMPLE
 
 STATUS can be "success" or "fail".
 
@@ -217,11 +242,13 @@ The list of all available namespaces.
 
 *** Syntax
 
+#+BEGIN_EXAMPLE
   <response id="23" type="Namespaces">
       <namespace name="CSymbols />
       <namespace name="Kernel" />
       ...
   </response>
+#+END_EXAMPLE
 
 *** TODO subspaces
 
@@ -232,11 +259,13 @@ The list of all available classes in the namespace.
 
 *** Syntax
 
+#+BEGIN_EXAMPLE
   <response id="67" type="Classes">
       <clas name="Object" />
       <clas name="SmallInteger" />
       ...
   </response>
+#+END_EXAMPLE
 
 ** Class
 
@@ -245,11 +274,13 @@ A class description.
 
 *** Syntax
 
+#+BEGIN_EXAMPLE
   <response id="80" type="Class" class="SomeClass">
       <instvar name="one" />
       <instvar name="two />
       <instvar name="three />
   </response>
+#+END_EXAMPLE
 
 Almost exactly matches CompileClass request.
 
@@ -260,11 +291,13 @@ The list of all available categories for a concrete class.
 
 *** Syntax
 
+#+BEGIN_EXAMPLE
   <response id="90" type="Categories">
       <category name="private" />
       <category name="accessors" />
       ...
   </response>
+#+END_EXAMPLE
 
 ** Methods
 
@@ -273,6 +306,7 @@ The list of all available methods in a concrete category for a concrete class.
 
 *** Syntax
 
+#+BEGIN_EXAMPLE
   <response
     id="100"
     type="Methods">
@@ -280,6 +314,7 @@ The list of all available methods in a concrete category for a concrete class.
       <category name="inject:into:" />
       ...
   </response>
+#+END_EXAMPLE
 
 ** MethodSource
 
@@ -288,11 +323,13 @@ A source string for a concrete method in a concrete class.
 
 *** Syntax
 
+#+BEGIN_EXAMPLE
   <response id="100" type="MethodSource" class="SomeClass" method="someMethod">
       someMethod [
           ^100 factorial
       ]
   </response>
+#+END_EXAMPLE
 
 As for CompileMethod request, to preserve XML parser from being broken, all
 suspicious symbols (such as &, >, < and others) must be escaped before
