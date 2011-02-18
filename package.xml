@@ -1,6 +1,10 @@
 <package>
   <name>Shampoo</name>
+
   <prereq>TCP</prereq>
+  <prereq>XML</prereq>
+  <prereq>XML-PullParser</prereq>  
+
   <namespace>Shampoo</namespace>
 
   <filein>server.st</filein>

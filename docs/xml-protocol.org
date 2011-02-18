@@ -1,19 +1,22 @@
-Shampoo XML protocol description
+#+TITLE Shampoo XML protocol description
 
-Dmitry Matveev, 11 Dec 2010
+| Date        | Author         | Whats changed                        |
+|-------------+----------------+--------------------------------------|
+| 11 Dec 2010 | Dmitry Matveev | Original version                     |
+| 18 Feb 2010 | Dmitry Matveev | Fix markup                           |
 
 * Overview
 
 Shampoo-XML is a protocol for remote Smalltalk image control. It provides a set
-of commands that allow...
-  - to get a list of namespaces;
-  - to get a list of classes in namespace;
-  - to get a list of methods in class (instance side or class side);
-  - to register a new class with the supplied description (comment, instance/class
+of commands that allow to...
+  - get a list of namespaces;
+  - get a list of classes in namespace;
+  - get a list of methods in class (instance side or class side);
+  - register a new class with the supplied description (comment, instance/class
     variable names, etc);
-  - to remove a class;
-  - to get a source string of a concrete method in a concrete class;
-  - to compile a supplied source string for a concrete method in a concrete class.
+  - remove a class;
+  - get a source string of a concrete method in a concrete class;
+  - compile a supplied source string for a concrete method in a concrete class.
 
 Shampo is functioning in a request/response server. Client sends a request to
 the server and server replies with a response. Server will not send anything
@@ -183,8 +186,8 @@ Compile a new class. Or recompile it, if a class is already exist.
 #+BEGIN_EXAMPLE
   <request id="80" type="CompileClass" class="SomeClass">
       <instvar name="one" />
-      <instvar name="two />
-      <instvar name="three />
+      <instvar name="two" />
+      <instvar name="three" />
   </request>
 #+END_EXAMPLE
 
@@ -244,7 +247,7 @@ The list of all available namespaces.
 
 #+BEGIN_EXAMPLE
   <response id="23" type="Namespaces">
-      <namespace name="CSymbols />
+      <namespace name="CSymbols" />
       <namespace name="Kernel" />
       ...
   </response>
@@ -277,8 +280,8 @@ A class description.
 #+BEGIN_EXAMPLE
   <response id="80" type="Class" class="SomeClass">
       <instvar name="one" />
-      <instvar name="two />
-      <instvar name="three />
+      <instvar name="two" />
+      <instvar name="three" />
   </response>
 #+END_EXAMPLE
 
