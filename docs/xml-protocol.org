@@ -45,7 +45,7 @@ ID (1) is a numeric value showing the number of the request in the sequence. Whe
 client sends a request with some ID, server should respond with a response of the
 same ID.
 
-TYPE (2) identifies a type of a message (see Requests). TYPE determines what
+TYPE (2) identifies a type of a message (see *Requests*). TYPE determines what
 will be included into the body of a request (3).
 
 ** Response structure
@@ -57,6 +57,9 @@ will be included into the body of a request (3).
     ...>
       <...>         (3)
   </response>
+#+END_EXAMPLE
+
+OR
 
 #+BEGIN_EXAMPLE
   <response id=... type=... ... />
@@ -264,8 +267,8 @@ The list of all available classes in the namespace.
 
 #+BEGIN_EXAMPLE
   <response id="67" type="Classes">
-      <clas name="Object" />
-      <clas name="SmallInteger" />
+      <class name="Object" />
+      <class name="SmallInteger" />
       ...
   </response>
 #+END_EXAMPLE
