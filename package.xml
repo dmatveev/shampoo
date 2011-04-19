@@ -7,6 +7,7 @@
 
   <namespace>Shampoo</namespace>
 
+  <filein>requests.st</filein>
   <filein>server.st</filein>
 
   <file>server.st</file>

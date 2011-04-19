@@ -1,11 +1,29 @@
 Namespace current: Shampoo [
 
     Object subclass: Request [
+        | id |
+
         Request class >> from: anXML [
             | attrs class |
             attrs := anXML attrMap.
             class := self subclasses detect: [:each | each is: (attrs at: 'type')].
-            ^class from: anXML
+            ^(class new: (attrs at: 'id') asInteger)
+                init: anXML;
+                yourself
+        ]
+
+        Request class >> new: anInteger [
+            ^(self new)
+                id: anInteger;
+                yourself
+        ]
+
+        init: anXML [
+            "Default implementation, do nothing"
+        ]
+
+        id: anInteger [
+            id := anInteger
         ]
     ]
 
@@ -13,71 +31,110 @@ Namespace current: Shampoo [
         NamespacesRequest class >> is: aString [
             ^aString = 'Namespaces'
         ]
-
-        NamespacesRequest class >> from: anXML [
-        ]
     ]
 
     Request subclass: ClassesRequest [
-        NamespacesRequest class >> is: aString [
+        | namespace |
+
+        ClassesRequest class >> is: aString [
             ^aString = 'Classes'
         ]
 
-        NamespacesRequest class >> from: anXML [
+        init: anXML [
+            namespace := anXML attrMap at: 'namespace'
         ]
     ]
 
     Request subclass: ClassRequest [
-        NamespacesRequest class >> is: aString [
+        | class |
+
+        ClassRequest class >> is: aString [
             ^aString = 'Class'
         ]
 
-        NamespacesRequest class >> from: anXML [
+        init: anXML [
+            class := anXML attrMap at: 'class'
         ]
     ]
 
     Request subclass: CategoriesRequest [
-        NamespacesRequest class >> is: aString [
+        | class side |
+
+        CategoriesRequest class >> is: aString [
             ^aString = 'Categories'
         ]
 
-        NamespacesRequest class >> from: anXML [
+        init: anXML [
+            | attrs |
+            attrs := anXML attrMap.
+            class := attrs at: 'class'.
+            side := (attrs at: 'side') asSymbol
         ]
     ]
 
     Request subclass: MethodsRequest [
-        NamespacesRequest class >> is: aString [
+        | class side category |
+
+        MethodsRequest class >> is: aString [
             ^aString = 'Methods'
         ]
 
-        NamespacesRequest class >> from: anXML [
+        init: anXML [
+            | attrs |
+            attrs := anXML attrMap.
+            class := attrs at: 'class'.
+            side := (attrs at: 'side') asSymbol.
+            category := attrs at: 'category'
         ]
     ]
 
     Request subclass: MethodSourceRequest [
-        NamespacesRequest class >> is: aString [
+        | class side name |
+
+        MethodSourceRequest class >> is: aString [
             ^aString = 'MethodSource'
         ]
 
-        NamespacesRequest class >> from: anXML [
+        init: anXML [
+            | attrs |
+            attrs := anXML attrMap.
+            class := attrs at: 'class'.
+            side := (attrs at: 'side') asSymbol.
+            name := attrs at: 'method'
         ]
     ]
 
     Request subclass: CompileClassRequest [
-        NamespacesRequest class >> is: aString [
+        | class instvars |
+
+        CompileClassRequest class >> is: aString [
             ^aString = 'CompileClass'
         ]
 
-        NamespacesRequest class >> from: anXML [
+        init: anXML [
+            | attrs |
+            anXML inspect.
+            attrs := anXML attrMap.
+            class := attrs at: 'class'.
+            instvars := (anXML elementsNamed: 'instvar')
+                            collect:  [:each | each attrMap at: 'name']
         ]
+
     ]
 
     Request subclass: CompileMethodRequest [
-        NamespacesRequest class >> is: aString [
+        | class side source |
+
+        CompileMethodRequest class >> is: aString [
             ^aString = 'CompileMethod'
         ]
 
-        NamespacesRequest class >> from: anXML [
+        init: anXML [
+            | attrs |
+            attrs := anXML attrMap.
+            class := attrs at: 'class'.
+            side := (attrs at: 'side') asSymbol.
+            source := anXML characterData
         ]
     ]
 ]

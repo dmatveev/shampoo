@@ -1,9 +1,11 @@
 #+TITLE Shampoo XML protocol description
 
-| Date        | Author         | Whats changed                        |
-|-------------+----------------+--------------------------------------|
-| 11 Dec 2010 | Dmitry Matveev | Original version                     |
-| 18 Feb 2010 | Dmitry Matveev | Fix markup                           |
+| Date        | Author         | Whats changed           |
+|-------------+----------------+-------------------------|
+| 11 Dec 2010 | Dmitry Matveev | Original version        |
+| 18 Feb 2011 | Dmitry Matveev | Fix markup              |
+| 13 Apr 2011 | Dmitry Matveev | Fix markup and mistakes |
+| 19 Apr 2011 | Dmitry Matveev | Typo fix |
 
 * Overview
 
@@ -140,7 +142,7 @@ concrete class.
 *** Syntax
 
 #+BEGIN_EXAMPLE
-  <request id="500
+  <request id="500"
     type="Methods"
     class="SomeClass"
     side="instance"
