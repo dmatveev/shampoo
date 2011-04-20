@@ -20,6 +20,7 @@ Namespace current: Shampoo [
         asXML [
             ^(XML.Element tag: 'response')
                 addAttribute: (XML.Attribute name: 'id' value: id asString);
+                addAttribute: (XML.Attribute name: 'type' value: self type);
                 yourself
         ]
     ]
@@ -50,53 +51,60 @@ Namespace current: Shampoo [
         ]
     ]
 
-    Response subclass: NamespacesResponse [
-        | list |
+    Response subclass: CollectionResponse [
+        | items |
 
-        NamespacesResponse class >> id: anInteger names: anArray [
-            ^(self id: anInteger)
-                names: anArray;
-                yourself
+        items: anArray [
+            items := anArray copy
         ]
 
-        names: anArray [
-            list := anArray
+        asXML [
+            | root |
+            root := super asXML.
+
+            items ifNotNil: [:lst | lst do:
+                [:each |
+                root addNode: ((XML.Element tag: self itemType)
+                                   addAttribute: (XML.Attribute name: 'name' value: each);
+                                   yourself)]].
+
+            ^root
+        ]
+
+        itemType [
+            ^self shouldNotImplement
+        ]
+    ]
+
+    CollectionResponse subclass: NamespacesResponse [
+        NamespacesResponse class >> id: anInteger names: anArray [
+            ^(self id: anInteger)
+                items: anArray;
+                yourself
         ]
 
         type [
             ^'Namespaces'
         ]
 
-        asXML [
-            | root |
-            root := super asXML.
-            root addAttribute: (XML.Attribute name: 'type' value: self type).
-
-            list ifNotNil: [:lst | lst do:
-                [:each |
-                root addNode: ((XML.Element tag: 'namespace')
-                                   addAttribute: (XML.Attribute name: 'name' value: each);
-                                   yourself)]].
-
-            ^root
+        itemType [
+            ^'namespace'
         ]
     ]
 
-    Response subclass: ClassesResponse [
-        | classes |
-
+    CollectionResponse subclass: ClassesResponse [
         ClassesResponse class >> id: anInteger classes: anArray [
             ^(self id: anInteger)
-                classes: anArray;
+                items: anArray;
                 yourself
-        ]
-
-        classes: anArray [
-            classes := anArray copy
         ]
 
         type [
             ^'Classes'
+        ]
+
+        itemType [
+            ^'namespace'
         ]
     ]
 
@@ -112,35 +120,95 @@ Namespace current: Shampoo [
         class: aClass [
             class := aClass
         ]
-    ]
 
-    ClassInfoResponse subclass: ClassResponse [
-        type [
-            ^'Class'
+        asXML [
+            ^(super asXML)
+                addAttribute: (XML.Attribute name: 'class' value: class);
+                yourself
         ]
     ]
 
+    ClassInfoResponse subclass: ClassResponse [
+        | instvars |
+
+        ClassResponse class >> id: anInteger class: aClass instvars: anArray [
+            ^(ClassResponse id: anInteger class: aClass)
+                instvars: anArray;
+                yourself
+        ]
+
+        instvars: anArray [
+            instvars := anArray copy
+        ]
+
+        type [
+            ^'Class'
+        ]
+
+        itemType [
+            ^'instvar'
+        ]
+   ]
+
     ClassInfoResponse subclass: MethodCategoriesResponse [
+        | categories |
+
+        MethodCategoriesResponse class >> id: anInteger class: aClass categories: anArray [
+            ^(MethodCategoriesResponse id: anInteger class: aClass)
+                categories: anArray;
+                yourself
+        ]
+
+        categories: anArray [
+            categories := anArray copy
+        ]
+
         type [
             ^'Categories'
+        ]
+    
+        asXML [
+            | root |
+            root := super asXML.
+
+            categories ifNotNil: [:lst | lst do:
+                [:each |
+                root addNode: ((XML.Element tag: 'category')
+                                   addAttribute: (XML.Attribute name: 'name' value: each);
+                                   yourself)]].
+
+            ^root
         ]
     ]
 
     ClassInfoResponse subclass: MethodsResponse [
-        | category |
+        | methods |
 
-        MethodsResponse class >> id: anInteger class: aClass category: aString [
+        MethodsResponse class >> id: anInteger class: aClass methods: anArray [
             ^(self id: anInteger class: aClass)
-                category: aString;
+                methods: aString;
                 yourself
         ]
 
-        category: aString [
-            category := aString
+        methods: anArray [
+            methods := anArray copy
         ]
 
         type [
             ^'Methods'
+        ]
+    
+        asXML [
+            | root |
+            root := super asXML.
+
+            methods ifNotNil: [:lst | lst do:
+                [:each |
+                root addNode: ((XML.Element tag: 'method')
+                                   addAttribute: (XML.Attribute name: 'name' value: each);
+                                   yourself)]].
+
+            ^root
         ]
     ]
 
@@ -160,6 +228,13 @@ Namespace current: Shampoo [
 
         type [
             ^'MethodSource'
+        ]
+
+        asXML [
+            ^(super asXML)
+                addAttribute: (XML.Attribute name: 'method' value: methodName);
+                addNode: (XML.Text text: methodSource);
+                yourself
         ]
     ]
 ]

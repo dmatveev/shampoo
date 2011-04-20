@@ -1,8 +1,9 @@
 #+TITLE Shampoo XML protocol description
 
-| Date        | Author         | Whats changed           |
-|-------------+----------------+-------------------------|
-| 11 Dec 2010 | Dmitry Matveev | Original version        |
+| Date        | Author         | Whats changed              |
+|-------------+----------------+----------------------------|
+| 11 Dec 2010 | Dmitry Matveev | Original version           |
+| 21 Apr 2011 | Dmitry Matveev | A critical fix in protocol |
 
 * Overview
 
@@ -315,8 +316,8 @@ The list of all available methods in a concrete category for a concrete class.
   <response
     id="100"
     type="Methods">
-      <category name="do:" />
-      <category name="inject:into:" />
+      <method name="do:" />
+      <method name="inject:into:" />
       ...
   </response>
 #+END_EXAMPLE
