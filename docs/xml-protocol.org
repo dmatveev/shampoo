@@ -3,9 +3,6 @@
 | Date        | Author         | Whats changed           |
 |-------------+----------------+-------------------------|
 | 11 Dec 2010 | Dmitry Matveev | Original version        |
-| 18 Feb 2011 | Dmitry Matveev | Fix markup              |
-| 13 Apr 2011 | Dmitry Matveev | Fix markup and mistakes |
-| 19 Apr 2011 | Dmitry Matveev | Typo fix |
 
 * Overview
 
@@ -241,7 +238,7 @@ OperationalResponse is a generic response from a server that indicates success o
   <response id="80" type="OperationalResponse" status="success" />
 #+END_EXAMPLE
 
-STATUS can be "success" or "fail".
+STATUS can be "success" or "failure".
 
 ** Namespaces
 

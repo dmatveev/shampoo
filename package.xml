@@ -8,7 +8,10 @@
   <namespace>Shampoo</namespace>
 
   <filein>requests.st</filein>
+  <filein>responses.st</filein>
   <filein>server.st</filein>
 
+  <file>requests.st</file>
+  <file>responses.st</file>
   <file>server.st</file>
 </package>
