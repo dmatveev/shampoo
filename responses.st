@@ -16,6 +16,12 @@ Namespace current: Shampoo [
         type [
             ^self shouldNotImplement
         ]
+
+        asXML [
+            ^(XML.Element tag: 'response')
+                addAttribute: (XML.Attribute name: 'id' value: id asString);
+                yourself
+        ]
     ]
 
     Response subclass: OperationalResponse [
@@ -38,10 +44,60 @@ Namespace current: Shampoo [
         success: aBoolean [
             success := aBoolean
         ]
+
+        type [
+            ^'OperationalResponse'
+        ]
     ]
 
     Response subclass: NamespacesResponse [
-        "TODO Subnamespaces"
+        | list |
+
+        NamespacesResponse class >> id: anInteger names: anArray [
+            ^(self id: anInteger)
+                names: anArray;
+                yourself
+        ]
+
+        names: anArray [
+            list := anArray
+        ]
+
+        type [
+            ^'Namespaces'
+        ]
+
+        asXML [
+            | root |
+            root := super asXML.
+            root addAttribute: (XML.Attribute name: 'type' value: self type).
+
+            list ifNotNil: [:lst | lst do:
+                [:each |
+                root addNode: ((XML.Element tag: 'namespace')
+                                   addAttribute: (XML.Attribute name: 'name' value: each);
+                                   yourself)]].
+
+            ^root
+        ]
+    ]
+
+    Response subclass: ClassesResponse [
+        | classes |
+
+        ClassesResponse class >> id: anInteger classes: anArray [
+            ^(self id: anInteger)
+                classes: anArray;
+                yourself
+        ]
+
+        classes: anArray [
+            classes := anArray copy
+        ]
+
+        type [
+            ^'Classes'
+        ]
     ]
 
     Response subclass: ClassInfoResponse [
@@ -58,7 +114,16 @@ Namespace current: Shampoo [
         ]
     ]
 
+    ClassInfoResponse subclass: ClassResponse [
+        type [
+            ^'Class'
+        ]
+    ]
+
     ClassInfoResponse subclass: MethodCategoriesResponse [
+        type [
+            ^'Categories'
+        ]
     ]
 
     ClassInfoResponse subclass: MethodsResponse [
@@ -72,6 +137,10 @@ Namespace current: Shampoo [
 
         category: aString [
             category := aString
+        ]
+
+        type [
+            ^'Methods'
         ]
     ]
 
@@ -87,6 +156,10 @@ Namespace current: Shampoo [
         method: aNameString methodSource: aSourceString [
             methodName := aNameString.
             methodSource := aSourceString
+        ]
+
+        type [
+            ^'MethodSource'
         ]
     ]
 ]
