@@ -42,6 +42,10 @@ Namespace current: Shampoo [
                 yourself
         ]
 
+        statusString [
+            ^success ifTrue: ['success'] ifFalse: ['failure']
+        ]
+
         success: aBoolean [
             success := aBoolean
         ]
@@ -49,9 +53,15 @@ Namespace current: Shampoo [
         type [
             ^'OperationalResponse'
         ]
+
+        asXML [
+            ^(super asXML)
+                addAttribute: (XML.Attribute name: 'status' value: self statusString);
+                yourself
+        ]
     ]
 
-    Response subclass: CollectionResponse [
+    Behavior subclass: AggregatedResponseBehavior [
         | items |
 
         items: anArray [
@@ -70,13 +80,9 @@ Namespace current: Shampoo [
 
             ^root
         ]
-
-        itemType [
-            ^self shouldNotImplement
-        ]
     ]
 
-    CollectionResponse subclass: NamespacesResponse [
+    Response subclass: NamespacesResponse [
         NamespacesResponse class >> id: anInteger names: anArray [
             ^(self id: anInteger)
                 items: anArray;
@@ -92,7 +98,7 @@ Namespace current: Shampoo [
         ]
     ]
 
-    CollectionResponse subclass: ClassesResponse [
+    Response subclass: ClassesResponse [
         ClassesResponse class >> id: anInteger classes: anArray [
             ^(self id: anInteger)
                 items: anArray;
@@ -104,7 +110,7 @@ Namespace current: Shampoo [
         ]
 
         itemType [
-            ^'namespace'
+            ^'class'
         ]
     ]
 
@@ -129,16 +135,10 @@ Namespace current: Shampoo [
     ]
 
     ClassInfoResponse subclass: ClassResponse [
-        | instvars |
-
         ClassResponse class >> id: anInteger class: aClass instvars: anArray [
             ^(ClassResponse id: anInteger class: aClass)
-                instvars: anArray;
+                items: anArray;
                 yourself
-        ]
-
-        instvars: anArray [
-            instvars := anArray copy
         ]
 
         type [
@@ -151,64 +151,34 @@ Namespace current: Shampoo [
    ]
 
     ClassInfoResponse subclass: MethodCategoriesResponse [
-        | categories |
-
         MethodCategoriesResponse class >> id: anInteger class: aClass categories: anArray [
             ^(MethodCategoriesResponse id: anInteger class: aClass)
-                categories: anArray;
+                items: anArray;
                 yourself
-        ]
-
-        categories: anArray [
-            categories := anArray copy
         ]
 
         type [
             ^'Categories'
         ]
-    
-        asXML [
-            | root |
-            root := super asXML.
 
-            categories ifNotNil: [:lst | lst do:
-                [:each |
-                root addNode: ((XML.Element tag: 'category')
-                                   addAttribute: (XML.Attribute name: 'name' value: each);
-                                   yourself)]].
-
-            ^root
+        itemType [
+            ^'category'
         ]
     ]
 
     ClassInfoResponse subclass: MethodsResponse [
-        | methods |
-
         MethodsResponse class >> id: anInteger class: aClass methods: anArray [
             ^(self id: anInteger class: aClass)
-                methods: aString;
+                items: anArray;
                 yourself
-        ]
-
-        methods: anArray [
-            methods := anArray copy
         ]
 
         type [
             ^'Methods'
         ]
-    
-        asXML [
-            | root |
-            root := super asXML.
 
-            methods ifNotNil: [:lst | lst do:
-                [:each |
-                root addNode: ((XML.Element tag: 'method')
-                                   addAttribute: (XML.Attribute name: 'name' value: each);
-                                   yourself)]].
-
-            ^root
+        itemType [
+            ^'method'
         ]
     ]
 
@@ -236,5 +206,14 @@ Namespace current: Shampoo [
                 addNode: (XML.Text text: methodSource);
                 yourself
         ]
+    ]
+
+    Eval [
+        {   NamespacesResponse.
+            ClassesResponse.
+            ClassResponse.
+            MethodCategoriesResponse.
+            MethodsResponse
+        } do: [:each | each mergeBehaviorFrom: AggregatedResponseBehavior]
     ]
 ]

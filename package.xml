@@ -7,10 +7,12 @@
 
   <namespace>Shampoo</namespace>
 
+  <filein>hacks.st</filein>
   <filein>requests.st</filein>
   <filein>responses.st</filein>
   <filein>server.st</filein>
 
+  <file>hacks.st</file>
   <file>requests.st</file>
   <file>responses.st</file>
   <file>server.st</file>
