@@ -5,6 +5,7 @@
 | 11 Dec 2010 | Dmitry Matveev | Original version                               |
 | 21 Apr 2011 | Dmitry Matveev | A critical fix in protocol                     |
 | 23 Apr 2011 | Dmitry Matveev | Added "namespace" parameter to "Class" request |
+|             |                | ...and to all other class-related requests     |
 
 * Overview
 
@@ -122,7 +123,12 @@ Ask server to send us a list of all the method categories in the concrete class
 *** Syntax
 
 #+BEGIN_EXAMPLE
-  <request id="500" type="Categories" class="SomeClass" side="instance" />
+  <request id="500"
+    type="Categories"
+    namespace="SomeNamespace"
+    class="SomeClass"
+    side="instance"
+  />
 #+END_EXAMPLE
 
   SIDE option may have two possible values:
@@ -143,6 +149,7 @@ concrete class.
 #+BEGIN_EXAMPLE
   <request id="500"
     type="Methods"
+    namespace="SomeNamespace"
     class="SomeClass"
     side="instance"
     category="some category"
@@ -171,6 +178,7 @@ in the class.
   <request
     id="123"
     type="MethodSource"
+    namespace="SomeNamespace"
     class="SomeClass"
     side="instance"
     method="method name"
@@ -188,7 +196,7 @@ Compile a new class. Or recompile it, if a class is already exist.
 *** Syntax
 
 #+BEGIN_EXAMPLE
-  <request id="80" type="CompileClass" class="SomeClass">
+  <request id="80" type="CompileClass" namespace="SomeNamespace" class="SomeClass">
       <instvar name="one" />
       <instvar name="two" />
       <instvar name="three" />
@@ -210,7 +218,7 @@ Ask server to compile a string of code to the specified class.
 *** Syntax
 
 #+BEGIN_EXAMPLE
-  <request id="80" type="CompileMethod" class="SomeClass" side="instance">
+  <request id="80" type="CompileMethod" namespace="SomeNamespace" class="SomeClass" side="instance">
     sampleCompare: anInteger with: anotherInteger [
         ^ anInteger &gt; anotherInteger
     ]

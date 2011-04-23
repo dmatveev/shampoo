@@ -88,7 +88,7 @@ Namespace current: Shampoo [
     ]
 
     Request subclass: CategoriesRequest [
-        | className side |
+        | className spaceName side |
 
         CategoriesRequest class >> is: aString [
             ^aString = 'Categories'
@@ -98,12 +98,13 @@ Namespace current: Shampoo [
             | attrs |
             attrs := anXML attrMap.
             className := attrs at: 'class'.
+            spaceName := attrs at: 'namespace'.
             side := (attrs at: 'side') asSymbol
         ]
 
         execute [
             | class cats |
-            class := Smalltalk at: className asSymbol.
+            class := (Smalltalk at: spaceName asSymbol) at: className asSymbol.
             (side = #class) ifTrue: [class := class class].
 
             cats := Set new.
@@ -118,7 +119,7 @@ Namespace current: Shampoo [
     ]
 
     Request subclass: MethodsRequest [
-        | className side category |
+        | className spaceName side category |
 
         MethodsRequest class >> is: aString [
             ^aString = 'Methods'
@@ -128,13 +129,14 @@ Namespace current: Shampoo [
             | attrs |
             attrs := anXML attrMap.
             className := attrs at: 'class'.
+            spaceName := attrs at: 'namespace'.
             side := (attrs at: 'side') asSymbol.
             category := attrs at: 'category'
         ]
 
         execute [
             | class methods |
-            class := Smalltalk at: className asSymbol.
+            class := (Smalltalk at: spaceName asSymbol) at: className asSymbol.
             (side = #class) ifTrue: [class := class class].
 
             methods := class methodDictionary associations select:
@@ -148,7 +150,7 @@ Namespace current: Shampoo [
     ]
 
     Request subclass: MethodSourceRequest [
-        | className side name |
+        | className spaceName side name |
 
         MethodSourceRequest class >> is: aString [
             ^aString = 'MethodSource'
@@ -158,13 +160,14 @@ Namespace current: Shampoo [
             | attrs |
             attrs := anXML attrMap.
             className := attrs at: 'class'.
+            spaceName := attrs at: 'namespace'.
             side := (attrs at: 'side') asSymbol.
             name := attrs at: 'method'
         ]
 
         execute [
             | class method |
-            class := Smalltalk at: className asSymbol.
+            class := (Smalltalk at: spaceName asSymbol) at: className asSymbol.
             (side = #class) ifTrue: [class := class class].
 
             method := class methodDictionary at: name asSymbol.
@@ -178,7 +181,7 @@ Namespace current: Shampoo [
     ]
 
     Request subclass: CompileClassRequest [
-        | class instvars |
+        | className spaceName instvars |
 
         CompileClassRequest class >> is: aString [
             ^aString = 'CompileClass'
@@ -188,7 +191,8 @@ Namespace current: Shampoo [
             | attrs |
             anXML inspect.
             attrs := anXML attrMap.
-            class := attrs at: 'class'.
+            className := attrs at: 'class'.
+            spaceName := attrs at: 'namespace'.
             instvars := (anXML elementsNamed: 'instvar')
                             collect:  [:each | each attrMap at: 'name']
         ]
@@ -201,7 +205,7 @@ Namespace current: Shampoo [
     ]
 
     Request subclass: CompileMethodRequest [
-        | className side source |
+        | className spaceName side source |
 
         CompileMethodRequest class >> is: aString [
             ^aString = 'CompileMethod'
@@ -211,13 +215,14 @@ Namespace current: Shampoo [
             | attrs |
             attrs := anXML attrMap.
             className := attrs at: 'class'.
+            spaceName := attrs at: 'namespace'.
             side := (attrs at: 'side') asSymbol.
             source := anXML characterData
         ]
 
         execute [
             | class failed |
-            class := Smalltalk at: className asSymbol.
+            class := (Smalltalk at: spaceName asSymbol) at: className asSymbol.
             (side = #class) ifTrue: [class := class class].
 
             class compile: source ifError: [^OperationalResponse failure: id].
