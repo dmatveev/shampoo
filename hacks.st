@@ -10,3 +10,10 @@ Namespace current: Shampoo [
         ]
     ]
 ]
+
+Collection extend [
+    elementsString [
+        <category: '*shampoo-hacks'>
+        ^self inject: '' into: [:acc :each | acc, each asString, ' ']
+    ]
+]

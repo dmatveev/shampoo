@@ -181,7 +181,7 @@ Namespace current: Shampoo [
     ]
 
     Request subclass: CompileClassRequest [
-        | className spaceName instvars |
+        | className superName superSpace spaceName instvars |
 
         CompileClassRequest class >> is: aString [
             ^aString = 'CompileClass'
@@ -189,19 +189,50 @@ Namespace current: Shampoo [
 
         init: anXML [
             | attrs |
-            anXML inspect.
             attrs := anXML attrMap.
             className := attrs at: 'class'.
             spaceName := attrs at: 'namespace'.
+            superName := attrs at: 'super'.
+            superSpace := attrs at: 'superspace'.
             instvars := (anXML elementsNamed: 'instvar')
                             collect:  [:each | each attrMap at: 'name']
         ]
 
         execute [
-            "TODO Implement it"
-            ^nil
-        ]
+            | parent class currentSpace targetSpace classVars poolDicts failed |
 
+            "Looks a bit kludgy, but currently I dont know how to make it better
+             TODO: refactor"
+
+            currentSpace := Namespace current.
+            targetSpace := Smalltalk at: spaceName asSymbol.
+
+            class := targetSpace at: className asSymbol ifAbsent: [nil].
+            parent := (Smalltalk at: superSpace asSymbol) at: superName asSymbol.
+
+            class
+                ifNil: [classVars := ''.
+                        poolDicts := '']
+                ifNotNil: [classVars := class classVarNames elementsString.
+                           poolDicts := class classPool keys elementsString].
+
+            failed := false.
+            Namespace current: targetSpace.
+
+            [class := parent
+                subclass: className asSymbol
+                instanceVariableNames: instvars elementsString
+                classVariableNames: classVars
+                poolDictionaries: poolDicts
+                category: ''
+            ] ifError: [failed := true].
+
+            Namespace current: currentSpace.
+
+            failed
+                ifTrue: [^OperationalResponse failure: id]
+                ifFalse: [^OperationalResponse success: id]
+        ]
     ]
 
     Request subclass: CompileMethodRequest [

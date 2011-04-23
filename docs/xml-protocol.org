@@ -1,11 +1,11 @@
 #+TITLE Shampoo XML protocol description
 
-| Date        | Author         | Whats changed                                  |
-|-------------+----------------+------------------------------------------------|
-| 11 Dec 2010 | Dmitry Matveev | Original version                               |
-| 21 Apr 2011 | Dmitry Matveev | A critical fix in protocol                     |
-| 23 Apr 2011 | Dmitry Matveev | Added "namespace" parameter to "Class" request |
-|             |                | ...and to all other class-related requests     |
+| Date        | Author         | Whats changed                                                       |
+|-------------+----------------+---------------------------------------------------------------------|
+| 11 Dec 2010 | Dmitry Matveev | Original version                                                    |
+| 21 Apr 2011 | Dmitry Matveev | A critical fix in protocol                                          |
+| 23 Apr 2011 | Dmitry Matveev | Added "namespace" parameter to all class-related requests           |
+|             |                | Added "super" and "superspace" parameters to "CompileClass" request |
 
 * Overview
 
@@ -196,7 +196,7 @@ Compile a new class. Or recompile it, if a class is already exist.
 *** Syntax
 
 #+BEGIN_EXAMPLE
-  <request id="80" type="CompileClass" namespace="SomeNamespace" class="SomeClass">
+  <request id="80" type="CompileClass" superspace="SuperNamespace" super="SuperClassName" namespace="SomeNamespace" class="SomeClass">
       <instvar name="one" />
       <instvar name="two" />
       <instvar name="three" />
