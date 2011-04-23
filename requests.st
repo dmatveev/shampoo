@@ -18,18 +18,28 @@ Namespace current: Shampoo [
                 yourself
         ]
 
+        id: anInteger [
+            id := anInteger
+        ]
+
         init: anXML [
             "Default implementation, do nothing"
         ]
 
-        id: anInteger [
-            id := anInteger
+        execute [
+            ^self subclassResponsibility
         ]
     ]
 
     Request subclass: NamespacesRequest [
         NamespacesRequest class >> is: aString [
             ^aString = 'Namespaces'
+        ]
+
+        execute [
+            | names |
+            names := (Namespace allInstances collect: [:each | each name asString]).
+            ^NamespacesResponse id: id names: names asSet asSortedCollection
         ]
     ]
 
@@ -43,6 +53,14 @@ Namespace current: Shampoo [
         init: anXML [
             namespace := anXML attrMap at: 'namespace'
         ]
+
+        execute [
+            | space names |
+            names := SortedCollection new.
+            space := Smalltalk at: namespace asSymbol.
+            space allClassesDo: [:each | names add: each name].
+            ^ClassesResponse id: id names: names
+        ]
     ]
 
     Request subclass: ClassRequest [
@@ -55,10 +73,17 @@ Namespace current: Shampoo [
         init: anXML [
             class := anXML attrMap at: 'class'
         ]
+
+        execute [
+            ^ClassResponse
+                id: id
+                class: class
+                instvars: (Smalltalk at: class asSymbol) instVarNames
+        ]
     ]
 
     Request subclass: CategoriesRequest [
-        | class side |
+        | className side |
 
         CategoriesRequest class >> is: aString [
             ^aString = 'Categories'
@@ -67,13 +92,28 @@ Namespace current: Shampoo [
         init: anXML [
             | attrs |
             attrs := anXML attrMap.
-            class := attrs at: 'class'.
+            className := attrs at: 'class'.
             side := (attrs at: 'side') asSymbol
+        ]
+
+        execute [
+            | class cats |
+            class := Smalltalk at: className asSymbol.
+            (side = #class) ifTrue: [class := class class].
+
+            cats := Set new.
+            class methodDictionary values do:
+            [:each | cats add: each descriptor category].
+
+            ^MethodCategoriesResponse
+                id: id
+                class: className
+                categories: cats asSortedCollection
         ]
     ]
 
     Request subclass: MethodsRequest [
-        | class side category |
+        | className side category |
 
         MethodsRequest class >> is: aString [
             ^aString = 'Methods'
@@ -82,14 +122,28 @@ Namespace current: Shampoo [
         init: anXML [
             | attrs |
             attrs := anXML attrMap.
-            class := attrs at: 'class'.
+            className := attrs at: 'class'.
             side := (attrs at: 'side') asSymbol.
             category := attrs at: 'category'
+        ]
+
+        execute [
+            | class methods |
+            class := Smalltalk at: className asSymbol.
+            (side = #class) ifTrue: [class := class class].
+
+            methods := class methodDictionary associations select:
+                        [:each | each value descriptor category = category].
+
+            ^MethodsResponse
+                id: id
+                class: className
+                methods: (methods collect: [:each | each key asString]) asSortedCollection
         ]
     ]
 
     Request subclass: MethodSourceRequest [
-        | class side name |
+        | className side name |
 
         MethodSourceRequest class >> is: aString [
             ^aString = 'MethodSource'
@@ -98,9 +152,23 @@ Namespace current: Shampoo [
         init: anXML [
             | attrs |
             attrs := anXML attrMap.
-            class := attrs at: 'class'.
+            className := attrs at: 'class'.
             side := (attrs at: 'side') asSymbol.
             name := attrs at: 'method'
+        ]
+
+        execute [
+            | class method |
+            class := Smalltalk at: className asSymbol.
+            (side = #class) ifTrue: [class := class class].
+
+            method := class methodDictionary at: name asSymbol.
+
+            ^MethodResponse
+                id: id
+                class: className
+                method: name
+                source: method methodSourceString
         ]
     ]
 
@@ -120,10 +188,15 @@ Namespace current: Shampoo [
                             collect:  [:each | each attrMap at: 'name']
         ]
 
+        execute [
+            "TODO Implement it"
+            ^nil
+        ]
+
     ]
 
     Request subclass: CompileMethodRequest [
-        | class side source |
+        | className side source |
 
         CompileMethodRequest class >> is: aString [
             ^aString = 'CompileMethod'
@@ -132,9 +205,18 @@ Namespace current: Shampoo [
         init: anXML [
             | attrs |
             attrs := anXML attrMap.
-            class := attrs at: 'class'.
+            className := attrs at: 'class'.
             side := (attrs at: 'side') asSymbol.
             source := anXML characterData
+        ]
+
+        execute [
+            | class failed |
+            class := Smalltalk at: className asSymbol.
+            (side = #class) ifTrue: [class := class class].
+
+            class compile: source ifError: [^OperationalResponse failure: id].
+            ^OperationalResponse success: id
         ]
     ]
 ]

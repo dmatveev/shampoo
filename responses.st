@@ -99,7 +99,7 @@ Namespace current: Shampoo [
     ]
 
     Response subclass: ClassesResponse [
-        ClassesResponse class >> id: anInteger classes: anArray [
+        ClassesResponse class >> id: anInteger names: anArray [
             ^(self id: anInteger)
                 items: anArray;
                 yourself
@@ -118,7 +118,7 @@ Namespace current: Shampoo [
         | class |
 
         ClassInfoResponse class >> id: anInteger class: aClass [
-            ^(ClassInfoResponse id: anInteger)
+            ^(self id: anInteger)
                 class: aClass;
                 yourself
         ]
