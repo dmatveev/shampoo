@@ -64,21 +64,26 @@ Namespace current: Shampoo [
     ]
 
     Request subclass: ClassRequest [
-        | class |
+        | className spaceName |
 
         ClassRequest class >> is: aString [
             ^aString = 'Class'
         ]
 
         init: anXML [
-            class := anXML attrMap at: 'class'
+            | attrs |
+            attrs := anXML attrMap.
+            className := attrs at: 'class'.
+            spaceName := attrs at: 'namespace'
         ]
 
         execute [
+            | class |
+            class := (Smalltalk at: spaceName asSymbol) at: className asSymbol.
             ^ClassResponse
                 id: id
-                class: class
-                instvars: (Smalltalk at: class asSymbol) instVarNames
+                class: className
+                instvars: class instVarNames
         ]
     ]
 

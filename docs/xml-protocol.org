@@ -1,9 +1,10 @@
 #+TITLE Shampoo XML protocol description
 
-| Date        | Author         | Whats changed              |
-|-------------+----------------+----------------------------|
-| 11 Dec 2010 | Dmitry Matveev | Original version           |
-| 21 Apr 2011 | Dmitry Matveev | A critical fix in protocol |
+| Date        | Author         | Whats changed                                  |
+|-------------+----------------+------------------------------------------------|
+| 11 Dec 2010 | Dmitry Matveev | Original version                               |
+| 21 Apr 2011 | Dmitry Matveev | A critical fix in protocol                     |
+| 23 Apr 2011 | Dmitry Matveev | Added "namespace" parameter to "Class" request |
 
 * Overview
 
@@ -102,12 +103,12 @@ See *Classes*
 ** Class
 
 *** Description
-Ask server to send us a class description
+Ask server to send us a class description from a concrete namespace
 
 *** Syntax
 
 #+BEGIN_EXAMPLE
-  <request id="15" type="Class" class="ConcreteClass" />
+  <request id="15" type="Class" namespace="ConcreteNamespace" class="ConcreteClass" />
 #+END_EXAMPLE
 
 *** Response

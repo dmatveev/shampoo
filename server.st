@@ -55,7 +55,8 @@ Namespace current: Shampoo [
         process: anXMLRequest [
             | r |
             r := Request from: anXMLRequest root.
-            r execute asXML inspect printNl.
+            r execute asXML printOn: sock.
+            sock flush
         ]
     ]
 
