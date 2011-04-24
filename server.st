@@ -8,6 +8,9 @@ XML.Element extend [
 
 Namespace current: Shampoo [
 
+    Exception subclass: ClientDisconnected [
+    ]
+
     Object subclass: RequestFetcher [
         | sock stanza |
 
@@ -19,37 +22,49 @@ Namespace current: Shampoo [
         init: aSocket [
             <category: 'private'>
             sock := aSocket.
-            stanza := WriteStream on: ''.
+            stanza := String new writeStream
         ]
 
         parsed [
             <category: 'private'>
-            ^XML XMLParser processDocumentString: stanza contents
+            ^XML.XMLParser processDocumentString: stanza contents
                            beforeScanDo: [:p | p validate: false]
         ]
 
         fetch [
             <category: 'private'>
             [sock isPeerAlive] whileTrue:
-                [[stanza nextPutAll: (sock upTo: $>); nextPut: $>.
-                  ^self parsed]
-                ifError: [Transcript << 'Waiting stanza to complete'; nl]].
+                [stanza nextPutAll: (sock upTo: $>); nextPut: $>.
+                 [^self parsed]
+                    on: XML.MalformedSignal
+                    do: [:e | Transcript << 'Incomplete stanza, waiting...'; nl]].
+            sock isPeerAlive ifFalse: [ClientDisconnected new signal]
         ]
     ]
 
     Object subclass: ClientConnection [
-        | sock |
+        | sock disconnectedHandler |
 
-        ClientConnection class >> on: aSocket [
+        ClientConnection class >> on: aSocket onDisconnect: aBlock[
             <category: 'instance creation'>
-            ^self new on: aSocket
+            ^self new on: aSocket onDisconnect: aBlock
         ]
         
-        on: aSocket [
+        on: aSocket onDisconnect: aBlock [
             <category: 'private'>
             sock := aSocket.
-            [sock isPeerAlive]
-                whileTrue: [self process: (RequestFetcher fetch: sock)]
+            disconnectedHandler := aBlock
+        ]
+
+        go [
+            [sock isPeerAlive] whileTrue:
+                [[self process: (RequestFetcher fetch: sock)]
+                on: ClientDisconnected do: [:e | self signalDisconnected]]
+        ]
+
+        signalDisconnected [
+            <category: 'private'>
+            disconnectedHandler ifNotNil: [:handler | handler value: self]
         ]
 
         process: anXMLRequest [
@@ -61,13 +76,35 @@ Namespace current: Shampoo [
     ]
 
     Object subclass: ShampooServer [
-        | server client |
+        | server clients clientsMutex |
+
+        clients [
+            ^clients ifNil: [clients := OrderedCollection new]
+        ]
+
+        acceptedClient [
+            <category: 'private'>
+            | client |
+            client := ClientConnection
+                on: server accept
+                onDisconnect: [:client | self handleDisconnected: client].
+            clientsMutex critical: [self clients add: client].
+            ^client
+        ]
+
+        handleDisconnected: aClient [
+            Transcript << 'The client has been disconnected'; nl.
+            clientsMutex critical: [self clients remove: aClient]
+        ]
 
         startOn: aPort [
             <category: 'private'>
+            clientsMutex := Semaphore forMutualExclusion.
             server := TCP.ServerSocket port: aPort.
-            server waitForConnection.
-            client := ClientConnection on: server accept
+
+            [server isOpen] whileTrue:
+                [server waitForConnection.
+                 [self acceptedClient go] fork]
         ]
 
         ShampooServer class >> startOn: aPort [
