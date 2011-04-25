@@ -6,6 +6,8 @@
 | 21 Apr 2011 | Dmitry Matveev | A critical fix in protocol                                          |
 | 23 Apr 2011 | Dmitry Matveev | Added "namespace" parameter to all class-related requests           |
 |             |                | Added "super" and "superspace" parameters to "CompileClass" request |
+| 25 Apr 2011 | Dmitry Matveev | Added "classvar" and "poolvar" subnodes to "Class"/"CompileClass"   |
+
 
 * Overview
 
@@ -200,6 +202,12 @@ Compile a new class. Or recompile it, if a class is already exist.
       <instvar name="one" />
       <instvar name="two" />
       <instvar name="three" />
+      <classvar name="classOne" />
+      <classvar name="classTwo" />
+      <classvar name="classThree" />
+      <poolvar name="poolOne" />
+      <poolvar name="poolTwo" />
+      <poolvar name="poolThree" />
   </request>
 #+END_EXAMPLE
 
@@ -294,6 +302,12 @@ A class description.
       <instvar name="one" />
       <instvar name="two" />
       <instvar name="three" />
+      <classvar name="classOne" />
+      <classvar name="classTwo" />
+      <classvar name="classThree" />
+      <poolvar name="poolOne" />
+      <poolvar name="poolTwo" />
+      <poolvar name="poolThree" />
   </response>
 #+END_EXAMPLE
 

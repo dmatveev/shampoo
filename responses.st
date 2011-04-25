@@ -64,17 +64,21 @@ Namespace current: Shampoo [
     Behavior subclass: AggregatedResponseBehavior [
         | items |
 
-        items: anArray [
-            items := anArray copy
+        items [
+            ^items ifNil: [items := Dictionary new]
+        ]
+
+        itemsAt: itemTypeString put: anArray [
+            self items at: itemTypeString put: anArray copy
         ]
 
         asXML [
             | root |
             root := super asXML.
 
-            items ifNotNil: [:lst | lst do:
-                [:each |
-                root addNode: ((XML.Element tag: self itemType)
+            self items keysAndValuesDo:
+                [:key :values | values do: [:each |
+                root addNode: ((XML.Element tag: key asString)
                                    addAttribute: (XML.Attribute name: 'name' value: each);
                                    yourself)]].
 
@@ -85,32 +89,24 @@ Namespace current: Shampoo [
     Response subclass: NamespacesResponse [
         NamespacesResponse class >> id: anInteger names: anArray [
             ^(self id: anInteger)
-                items: anArray;
+                itemsAt: 'namespace' put: anArray;
                 yourself
         ]
 
         type [
             ^'Namespaces'
         ]
-
-        itemType [
-            ^'namespace'
-        ]
     ]
 
     Response subclass: ClassesResponse [
         ClassesResponse class >> id: anInteger names: anArray [
             ^(self id: anInteger)
-                items: anArray;
+                itemsAt: 'class' put: anArray;
                 yourself
         ]
 
         type [
             ^'Classes'
-        ]
-
-        itemType [
-            ^'class'
         ]
     ]
 
@@ -135,50 +131,41 @@ Namespace current: Shampoo [
     ]
 
     ClassInfoResponse subclass: ClassResponse [
-        ClassResponse class >> id: anInteger class: aClass instvars: anArray [
+        ClassResponse class >> id: anInteger class: aClass instvars: anInstVars
+                               classvars: aClassVars poolvars: aPoolDicts [
             ^(ClassResponse id: anInteger class: aClass)
-                items: anArray;
+                itemsAt: 'instvar'  put: anInstVars;
+                itemsAt: 'classvar' put: aClassVars;
+                itemsAt: 'poolvar'  put: aPoolDicts;
                 yourself
         ]
 
         type [
             ^'Class'
         ]
-
-        itemType [
-            ^'instvar'
-        ]
    ]
 
     ClassInfoResponse subclass: MethodCategoriesResponse [
         MethodCategoriesResponse class >> id: anInteger class: aClass categories: anArray [
             ^(MethodCategoriesResponse id: anInteger class: aClass)
-                items: anArray;
+                itemsAt: 'category' put: anArray;
                 yourself
         ]
 
         type [
             ^'Categories'
         ]
-
-        itemType [
-            ^'category'
-        ]
     ]
 
     ClassInfoResponse subclass: MethodsResponse [
         MethodsResponse class >> id: anInteger class: aClass methods: anArray [
             ^(self id: anInteger class: aClass)
-                items: anArray;
+                itemsAt: 'method' put: anArray;
                 yourself
         ]
 
         type [
             ^'Methods'
-        ]
-
-        itemType [
-            ^'method'
         ]
     ]
 

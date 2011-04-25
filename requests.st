@@ -84,6 +84,8 @@ Namespace current: Shampoo [
                 id: id
                 class: className
                 instvars: class instVarNames
+                classvars: class classVarNames
+                poolvars: class sharedPools
         ]
     ]
 
@@ -181,25 +183,28 @@ Namespace current: Shampoo [
     ]
 
     Request subclass: CompileClassRequest [
-        | className superName superSpace spaceName instvars |
+        | className superName superSpace spaceName instvars classvars poolvars |
 
         CompileClassRequest class >> is: aString [
             ^aString = 'CompileClass'
         ]
 
         init: anXML [
-            | attrs |
+            | attrs fetchBlock |
             attrs := anXML attrMap.
             className := attrs at: 'class'.
             spaceName := attrs at: 'namespace'.
             superName := attrs at: 'super'.
             superSpace := attrs at: 'superspace'.
-            instvars := (anXML elementsNamed: 'instvar')
-                            collect:  [:each | each attrMap at: 'name']
+            fetchBlock := [:type | (anXML elementsNamed: type) collect:
+                                    [:each | each attrMap at: 'name']].
+            instvars := fetchBlock value: 'instvar'.
+            classvars := fetchBlock value: 'classvar'.
+            poolvars := fetchBlock value: 'poolvar'.
         ]
 
         execute [
-            | parent class currentSpace targetSpace classVars poolDicts failed |
+            | parent class currentSpace targetSpace failed |
 
             "Looks a bit kludgy, but currently I dont know how to make it better
              TODO: refactor"
@@ -210,22 +215,16 @@ Namespace current: Shampoo [
             class := targetSpace at: className asSymbol ifAbsent: [nil].
             parent := (Smalltalk at: superSpace asSymbol) at: superName asSymbol.
 
-            class
-                ifNil: [classVars := ''.
-                        poolDicts := '']
-                ifNotNil: [classVars := class classVarNames elementsString.
-                           poolDicts := class classPool keys elementsString].
-
             failed := false.
             Namespace current: targetSpace.
 
             [class := parent
                 subclass: className asSymbol
                 instanceVariableNames: instvars elementsString
-                classVariableNames: classVars
-                poolDictionaries: poolDicts
+                classVariableNames: classvars elementsString
+                poolDictionaries: '' "poolvars elementsString"
                 category: ''
-            ] ifError: [failed := true].
+            ] on: Exception do: [:e | e inspect. failed := true].
 
             Namespace current: currentSpace.
 
