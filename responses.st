@@ -79,7 +79,7 @@ Namespace current: Shampoo [
             self items keysAndValuesDo:
                 [:key :values | values do: [:each |
                 root addNode: ((XML.Element tag: key asString)
-                                   addAttribute: (XML.Attribute name: 'name' value: each);
+                                   addNode: (XML.Text text: each);
                                    yourself)]].
 
             ^root

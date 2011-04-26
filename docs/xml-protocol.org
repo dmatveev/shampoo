@@ -7,6 +7,7 @@
 | 23 Apr 2011 | Dmitry Matveev | Added "namespace" parameter to all class-related requests           |
 |             |                | Added "super" and "superspace" parameters to "CompileClass" request |
 | 25 Apr 2011 | Dmitry Matveev | Added "classvar" and "poolvar" subnodes to "Class"/"CompileClass"   |
+| 27 Apr 2011 | Dmitry Matveev | New format for aggregated responses and requests, etc               |
 
 
 * Overview
@@ -199,15 +200,15 @@ Compile a new class. Or recompile it, if a class is already exist.
 
 #+BEGIN_EXAMPLE
   <request id="80" type="CompileClass" superspace="SuperNamespace" super="SuperClassName" namespace="SomeNamespace" class="SomeClass">
-      <instvar name="one" />
-      <instvar name="two" />
-      <instvar name="three" />
-      <classvar name="classOne" />
-      <classvar name="classTwo" />
-      <classvar name="classThree" />
-      <poolvar name="poolOne" />
-      <poolvar name="poolTwo" />
-      <poolvar name="poolThree" />
+      <instvar>one</instvar>
+      <instvar>two</instvar>
+      <instvar>three</instvar>
+      <classvar>classOne</classvar>
+      <classvar>classTwo</classvar>
+      <classvar>classThree</classvar>
+      <poolvar>poolOne</poolvar>
+      <poolvar>poolTwo</poolvar>
+      <poolvar>poolThree</poolvar>
   </request>
 #+END_EXAMPLE
 
@@ -267,8 +268,8 @@ The list of all available namespaces.
 
 #+BEGIN_EXAMPLE
   <response id="23" type="Namespaces">
-      <namespace name="CSymbols" />
-      <namespace name="Kernel" />
+      <namespace>CSymbols</namespace>
+      <namespace>Kernel</namespace>
       ...
   </response>
 #+END_EXAMPLE
@@ -284,8 +285,8 @@ The list of all available classes in the namespace.
 
 #+BEGIN_EXAMPLE
   <response id="67" type="Classes">
-      <class name="Object" />
-      <class name="SmallInteger" />
+      <class>Object</class>
+      <class>SmallInteger</class>
       ...
   </response>
 #+END_EXAMPLE
@@ -299,15 +300,15 @@ A class description.
 
 #+BEGIN_EXAMPLE
   <response id="80" type="Class" class="SomeClass">
-      <instvar name="one" />
-      <instvar name="two" />
-      <instvar name="three" />
-      <classvar name="classOne" />
-      <classvar name="classTwo" />
-      <classvar name="classThree" />
-      <poolvar name="poolOne" />
-      <poolvar name="poolTwo" />
-      <poolvar name="poolThree" />
+      <instvar>one</instvar>
+      <instvar>two</instvar>
+      <instvar>three</instvar>
+      <classvar>classOne</classvar>
+      <classvar>classTwo</classvar>
+      <classvar>classThree</classvar>
+      <poolvar>poolOne</poolvar>
+      <poolvar>poolTwo</poolvar>
+      <poolvar>poolThree</poolvar>
   </response>
 #+END_EXAMPLE
 
@@ -322,8 +323,8 @@ The list of all available categories for a concrete class.
 
 #+BEGIN_EXAMPLE
   <response id="90" type="Categories">
-      <category name="private" />
-      <category name="accessors" />
+      <category>private</category>
+      <category>accessors</category>
       ...
   </response>
 #+END_EXAMPLE
@@ -336,11 +337,9 @@ The list of all available methods in a concrete category for a concrete class.
 *** Syntax
 
 #+BEGIN_EXAMPLE
-  <response
-    id="100"
-    type="Methods">
-      <method name="do:" />
-      <method name="inject:into:" />
+  <response id="100" type="Methods" class="SomeClass">
+      <method>do:</method>
+      <method>inject:into:</method>
       ...
   </response>
 #+END_EXAMPLE

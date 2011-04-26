@@ -197,7 +197,7 @@ Namespace current: Shampoo [
             superName := attrs at: 'super'.
             superSpace := attrs at: 'superspace'.
             fetchBlock := [:type | (anXML elementsNamed: type) collect:
-                                    [:each | each attrMap at: 'name']].
+                                    [:each | each characterData]].
             instvars := fetchBlock value: 'instvar'.
             classvars := fetchBlock value: 'classvar'.
             poolvars := fetchBlock value: 'poolvar'.
