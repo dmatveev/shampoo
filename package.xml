@@ -12,6 +12,12 @@
   <filein>responses.st</filein>
   <filein>server.st</filein>
 
+  <test>
+    <sunit>Shampoo.RequestsTest</sunit>
+    <filein>tests.st</filein>
+  </test>
+
+
   <file>hacks.st</file>
   <file>requests.st</file>
   <file>responses.st</file>

@@ -59,7 +59,7 @@ Namespace current: Shampoo [
             | space names |
             names := SortedCollection new.
             space := Smalltalk at: namespace asSymbol.
-            space allClassesDo: [:each | names add: each name].
+            space allClassesDo: [:each | names add: each name asString].
             ^ClassesResponse id: id names: names
         ]
     ]
