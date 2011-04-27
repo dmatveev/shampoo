@@ -6,7 +6,7 @@ Namespace current: Shampoo [
         Request class >> from: anXML [
             | attrs class |
             attrs := anXML attrMap.
-            class := self subclasses detect: [:each | each is: (attrs at: 'type')].
+            class := Request subclasses detect: [:each | each is: (attrs at: 'type')].
             ^(class new: (attrs at: 'id') asInteger)
                 init: anXML;
                 yourself
