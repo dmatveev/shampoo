@@ -37,6 +37,9 @@ Namespace current: Smalltalk [
                 ^'Smalltalk is cool!'
             ]
         ]
+
+        Object subclass: SampleClassD [
+        ]
     ]
 ]
 
@@ -61,27 +64,23 @@ Namespace current: Shampoo [
         methodSource [^methodSource]
     ]
 
-
     TestCase subclass: RequestsTest [
-        | namespaces classes class cats methods method |
+        | namespaces classes class cats methods method compileClass compileMethod |
 
         defaultLogPolicyClass [
             <category: 'logging'>
             ^TestVerboseLog
         ]
 
-        allTestCases [
-            ^{ 'namespaces' -> self testNamespaces.
-            }
-        ]
-
         setUp [
-            namespaces := self request: NamespacesRequest from: self namespacesSample.
-            classes := self request: ClassesRequest from: self classesSample.
-            class := self request: ClassRequest from: self classSample.
-            cats := self request: CategoriesRequest from: self catsSample.
-            methods := self request: MethodsRequest from: self methodsSample.
-            method := self request: MethodSourceRequest from: self methodSample.
+            namespaces := self requestFrom: self namespacesSample.
+            classes := self requestFrom: self classesSample.
+            class := self requestFrom: self classSample.
+            cats := self requestFrom: self catsSample.
+            methods := self requestFrom: self methodsSample.
+            method := self requestFrom: self methodSample.
+            compileClass := self requestFrom: self compileClassSample.
+            compileMethod := self requestFrom: self compileMethodSample.
         ]
 
         testNamespaces [
@@ -136,6 +135,25 @@ Namespace current: Shampoo [
             self should: [r methodName = 'doSomethingElse:withArg:']
         ]
 
+        testCompileClass [
+            | r compiledClass instVars classVars |
+            r := compileClass execute.
+            compiledClass := ShampooSamples at: #SampleClassC.
+            self should: [compiledClass ~= nil].
+
+            instVars := compiledClass instVarNames asStringArray.
+            classVars := compiledClass classVarNames asStringArray.
+            self should: [instVars includes: 'one'; includes: 'two'; includes: 'three'];
+                 should: [classVars includes: 'classOne'; includes: 'classTwo'; includes: 'classThree']
+        ]
+
+        testCompileMethod [
+            | r value |
+            r := compileMethod execute.
+            value := ShampooSamples.SampleClassD new sampleCompiledMethod: 11.
+            self should: [value = 42]
+        ]
+
         namespacesSample [
             ^'<request id="23" type="Namespaces" />'
         ]
@@ -164,12 +182,34 @@ Namespace current: Shampoo [
                class="SampleClassB" side="instance" method="doSomethingElse:withArg:"/>'
         ]
 
-        request: aRequestClass from: aString [
+        compileClassSample [
+            ^'<request id="80" type="CompileClass" superspace="Smalltalk" super="Object" namespace="ShampooSamples" class="SampleClassC">
+      <instvar>one</instvar>
+      <instvar>two</instvar>
+      <instvar>three</instvar>
+      <classvar>classOne</classvar>
+      <classvar>classTwo</classvar>
+      <classvar>classThree</classvar>
+      <poolvar>poolOne</poolvar>
+      <poolvar>poolTwo</poolvar>
+      <poolvar>poolThree</poolvar>
+  </request>'
+        ]
+
+        compileMethodSample [
+            ^'<request id="80" type="CompileMethod" namespace="ShampooSamples" class="SampleClassD" side="instance">
+    sampleCompiledMethod: anInteger [
+        ^anInteger * 4 - 2
+    ]
+  </request>'
+        ]
+
+        requestFrom: aString [
             | xml |
             xml := XML.XMLParser
                         processDocumentString: aString
                         beforeScanDo: [:p | p validate: false].
-            ^aRequestClass from: xml root
+            ^Request from: xml root
         ]
     ]
 ]
