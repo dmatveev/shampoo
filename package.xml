@@ -13,10 +13,16 @@
   <filein>server.st</filein>
 
   <test>
-    <sunit>Shampoo.RequestsTest</sunit>
+    <sunit>Shampoo.NamespacesTest</sunit>
+    <sunit>Shampoo.ClassesTest</sunit>
+    <sunit>Shampoo.ClassTest</sunit>
+    <sunit>Shampoo.CatsTest</sunit>
+    <sunit>Shampoo.MethodsTest</sunit>
+    <sunit>Shampoo.MethodTest</sunit>
+    <sunit>Shampoo.CompileClassTest</sunit>
+    <sunit>Shampoo.CompileMethodTest</sunit>
     <filein>tests.st</filein>
   </test>
-
 
   <file>hacks.st</file>
   <file>requests.st</file>
