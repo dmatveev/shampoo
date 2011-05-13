@@ -125,7 +125,7 @@ Namespace current: Shampoo [
 
         class: aClass attrs: anArray [
             class := aClass.
-            attrs := Dictionary from: anArray
+            anArray isNil ifFalse: [attrs := Dictionary from: anArray].
         ]
 
         asXML [
