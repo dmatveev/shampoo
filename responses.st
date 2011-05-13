@@ -111,29 +111,39 @@ Namespace current: Shampoo [
     ]
 
     Response subclass: ClassInfoResponse [
-        | class |
+        | class attrs |
 
         ClassInfoResponse class >> id: anInteger class: aClass [
+            ^self id: anInteger class: aClass attrs: nil
+        ]
+
+        ClassInfoResponse class >> id: anInteger class: aClass attrs: anArray [
             ^(self id: anInteger)
-                class: aClass;
+                class: aClass attrs: anArray
                 yourself
         ]
 
-        class: aClass [
-            class := aClass
+        class: aClass attrs: anArray [
+            class := aClass.
+            attrs := Dictionary from: anArray
         ]
 
         asXML [
-            ^(super asXML)
-                addAttribute: (XML.Attribute name: 'class' value: class);
-                yourself
+            | r |
+            r := super asXML.
+            r addAttribute: (XML.Attribute name: 'class' value: class).
+            attrs ifNotNil:
+              [:dict |
+              dict keysAndValuesDo:
+                  [:key :value |
+                  r addAttribute: (XML.Attribute name: key value: value)]]
         ]
     ]
 
     ClassInfoResponse subclass: ClassResponse [
-        ClassResponse class >> id: anInteger class: aClass instvars: anInstVars
-                               classvars: aClassVars poolvars: aPoolDicts [
-            ^(ClassResponse id: anInteger class: aClass)
+        ClassResponse class >> id: anInteger class: aClass superclass: aSuperClass
+                               instvars: anInstVars classvars: aClassVars poolvars: aPoolDicts [
+            ^(ClassResponse id: anInteger class: aClass attrs: {'superclass' -> aSuperClass})
                 itemsAt: 'instvar'  put: anInstVars;
                 itemsAt: 'classvar' put: aClassVars;
                 itemsAt: 'poolvar'  put: aPoolDicts;

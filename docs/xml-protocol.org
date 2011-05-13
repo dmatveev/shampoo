@@ -8,7 +8,7 @@
 |             |                | Added "super" and "superspace" parameters to "CompileClass" request |
 | 25 Apr 2011 | Dmitry Matveev | Added "classvar" and "poolvar" subnodes to "Class"/"CompileClass"   |
 | 27 Apr 2011 | Dmitry Matveev | New format for aggregated responses and requests, etc               |
-
+| 13 May 2011 | Dmitry Matveev | Added "superclass" attribute to "Class" response                    |
 
 * Overview
 
@@ -299,7 +299,7 @@ A class description.
 *** Syntax
 
 #+BEGIN_EXAMPLE
-  <response id="80" type="Class" class="SomeClass">
+  <response id="80" type="Class" class="SomeClass" superclass="SuperClass">
       <instvar>one</instvar>
       <instvar>two</instvar>
       <instvar>three</instvar>
