@@ -136,7 +136,8 @@ Namespace current: Shampoo [
               [:dict |
               dict keysAndValuesDo:
                   [:key :value |
-                  r addAttribute: (XML.Attribute name: key value: value)]]
+                  r addAttribute: (XML.Attribute name: key value: value)]].
+            ^r
         ]
     ]
 
