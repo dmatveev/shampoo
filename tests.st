@@ -56,7 +56,7 @@ Namespace current: Shampoo [
     ]
 
     ClassInfoResponse extend [
-        class [^class]
+        className [^class]
     ]
 
     MethodResponse extend [

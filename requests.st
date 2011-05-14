@@ -84,10 +84,10 @@ Namespace current: Shampoo [
             ^ClassResponse
                 id: id
                 class: className
-                superclass: class superclass printString
-                instvars: class instVarNames
-                classvars: class classVarNames
-                poolvars: class sharedPools
+                superclass: class superclass name printString
+                instvars: class instVarNames asStringArray
+                classvars: class classVarNames asStringArray
+                poolvars: class sharedPools asStringArray
         ]
     ]
 
