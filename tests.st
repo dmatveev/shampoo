@@ -40,6 +40,9 @@ Namespace current: Smalltalk [
 
         Object subclass: SampleClassD [
         ]
+
+        nil subclass: SampleClassE [
+        ]
     ]
 ]
 
@@ -57,6 +60,7 @@ Namespace current: Shampoo [
 
     ClassInfoResponse extend [
         className [^class]
+        attrs [^attrs]
     ]
 
     MethodResponse extend [
@@ -80,18 +84,26 @@ Namespace current: Shampoo [
     ]
 
     ShampooTestCase subclass: NamespacesTest [
-        | namespaces |
+        | namespaces r items |
 
         setUp [
-            namespaces := self requestFrom: self namespacesSample
+            namespaces := self requestFrom: self namespacesSample.
+            r := namespaces execute.
+            items := r items at: 'namespace'
         ]
 
         testNamespaces [
-            | r items |
-            r := namespaces execute.
-            items := r items at: 'namespace'.
             self should: [items includes: 'Shampoo'];
                  should: [items includes: 'ShampooSamples']
+        ]
+
+        testIndirectSubspaces [
+            "Currently Shampoo supports only 'root' namespaces. Indirect subspaces should not
+             be included in the response"
+            | indirect |
+            indirect := [Namespace allInstances detect: [:each | each environment ~= Smalltalk]]
+                        ifError: [nil].
+            indirect ifNotNil: [self shouldnt: [items includes: indirect name]]
         ]
 
         namespacesSample [
@@ -120,28 +132,44 @@ Namespace current: Shampoo [
     ]
 
     ShampooTestCase subclass: ClassTest [
-        | class |
+        | class nilSubclass r nilr |
 
         setUp [
-            class := self requestFrom: self classSample
+            class := self requestFrom: self classSample.
+            nilSubclass := self requestFrom: self nilSubclassSample.
+            r := class execute.
+            nilr := nilSubclass execute.
         ]
 
-        testClass [
-            | r instvars classvars |
-            r := class execute.
-            instvars := r items at: 'instvar'.
-            classvars := r items at: 'classvar'.
-            self should: [instvars includes: 'a'];
-                 should: [instvars includes: 'b'];
-                 should: [instvars includes: 'c'];
-                 should: [classvars includes: 'one'];
-                 should: [classvars includes: 'two'];
-                 should: [classvars includes: 'three']
+        testSuperclass [
+            self should: [(r attrs at: 'superclass') = 'Object'];
+                 should: [(nilr attrs at: 'superclass') = 'nil']
+        ]
+
+        testInstvars [
+            | vars |
+            vars := r items at: 'instvar'.
+            self should: [vars includes: 'a'];
+                 should: [vars includes: 'b'];
+                 should: [vars includes: 'c']
+        ]
+
+        testClassvars [
+            | vars |
+            vars := r items at: 'classvar'.
+            self should: [vars includes: 'one'];
+                 should: [vars includes: 'two'];
+                 should: [vars includes: 'three']
         ]
 
         classSample [
             ^'<request id="15" type="Class" namespace="ShampooSamples"
                class="SampleClassA" />'
+        ]
+
+        nilSubclassSample [
+            ^'<request id="15" type="Class" namespace="ShampooSamples"
+               class="SampleClassE" />'
         ]
     ]
 
@@ -208,22 +236,32 @@ Namespace current: Shampoo [
     ]
 
     ShampooTestCase subclass: CompileClassTest [
-        | compileClass |
+        | compileClass r compiledClass |
 
         setUp [
             compileClass := self requestFrom: self compileClassSample.
+            r := compileClass execute.
+            compiledClass := ShampooSamples at: #SampleClassC
         ]
 
-        testCompileClass [
-            | r compiledClass instVars classVars |
-            r := compileClass execute.
-            compiledClass := ShampooSamples at: #SampleClassC.
-            self should: [compiledClass ~= nil].
+        tesCompiledClass [
+            self should: [compiledClass ~= nil]
+        ]
 
-            instVars := compiledClass instVarNames asStringArray.
-            classVars := compiledClass classVarNames asStringArray.
-            self should: [instVars includes: 'one'; includes: 'two'; includes: 'three'];
-                 should: [classVars includes: 'classOne'; includes: 'classTwo'; includes: 'classThree']
+        testInstvars [
+            | vars |
+            vars := compiledClass instVarNames asStringArray.
+            self should: [vars includes: 'one'];
+                 should: [vars includes: 'two'];
+                 should: [vars includes: 'three']
+        ]
+
+        testClassvars [
+            | vars |
+            vars := compiledClass classVarNames asStringArray.
+            self should: [vars includes: 'classOne'];
+                 should: [vars includes: 'classTwo'];
+                 should: [vars includes: 'classThree']
         ]
 
         compileClassSample [
