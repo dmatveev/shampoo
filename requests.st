@@ -6,7 +6,7 @@ Namespace current: Shampoo [
         Request class >> from: anXML [
             | attrs class |
             attrs := anXML attrMap.
-            class := self subclasses detect: [:each | each is: (attrs at: 'type')].
+            class := Request subclasses detect: [:each | each is: (attrs at: 'type')].
             ^(class new: (attrs at: 'id') asInteger)
                 init: anXML;
                 yourself
@@ -59,7 +59,7 @@ Namespace current: Shampoo [
             | space names |
             names := SortedCollection new.
             space := Smalltalk at: namespace asSymbol.
-            space allClassesDo: [:each | names add: each name].
+            space allClassesDo: [:each | names add: each name asString].
             ^ClassesResponse id: id names: names
         ]
     ]
@@ -85,9 +85,9 @@ Namespace current: Shampoo [
                 id: id
                 class: className
                 superclass: class superclass printString
-                instvars: class instVarNames
-                classvars: class classVarNames
-                poolvars: class sharedPools
+                instvars: class instVarNames asStringArray
+                classvars: class classVarNames asStringArray
+                poolvars: class sharedPools asStringArray
         ]
     ]
 
