@@ -38,8 +38,9 @@ Namespace current: Shampoo [
 
         execute [
             | names |
-            names := (Namespace allInstances collect: [:each | each name asString]) asSet.
-            ^NamespacesResponse id: id names: (#('Smalltalk'), names asSortedCollection)
+            names := ((Namespace allInstances select: [:each | each environment = Smalltalk])
+                        collect: [:each | each name asString]) asSet asOrderedCollection.
+            ^NamespacesResponse id: id names: (#('Smalltalk'), names)
         ]
     ]
 
