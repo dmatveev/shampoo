@@ -174,10 +174,11 @@ Namespace current: Shampoo [
     ]
 
     ShampooTestCase subclass: CatsTest [
-        | cats |
+        | cats emptyCats |
 
         setUp [
-            cats := self requestFrom: self catsSample
+            cats := self requestFrom: self catsSample.
+            emptyCats := self requestFrom: self emptyCatsSample.
         ]
 
         testCats [
@@ -188,9 +189,21 @@ Namespace current: Shampoo [
                  should: [items includes: 'accessors']
         ]
 
+        testEmptyCats [
+            | r items |
+            r := emptyCats execute.
+            items := r items at: 'category'.
+            self should: [items isEmpty]
+        ]
+
         catsSample [
             ^'<request id="500" type="Categories" namespace="ShampooSamples"
                class="SampleClassB" side="instance"/>'
+        ]
+
+        emptyCatsSample [
+            ^'<request id="500" type="Categories" namespace="ShampooSamples"
+               class="SampleClassA" side="instance"/>'
         ]
     ]
 

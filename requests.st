@@ -112,8 +112,8 @@ Namespace current: Shampoo [
             (side = #class) ifTrue: [class := class class].
 
             cats := Set new.
-            class methodDictionary values do:
-            [:each | cats add: each descriptor category].
+            class methodDictionary ifNotNil: [:d | d values do:
+            [:each | cats add: each descriptor category]].
 
             ^MethodCategoriesResponse
                 id: id
