@@ -12,6 +12,10 @@ Namespace current: Smalltalk [
             three := 3.
         ]
 
+        SampleClassA class extend [
+            | d |
+        ]
+
         Object subclass: SampleClassB [
             doSomething [
                 <category: 'sample-category'>
@@ -132,13 +136,15 @@ Namespace current: Shampoo [
     ]
 
     ShampooTestCase subclass: ClassTest [
-        | class nilSubclass r nilr |
+        | class nilSubclass classSide r nilr classr |
 
         setUp [
             class := self requestFrom: self classSample.
             nilSubclass := self requestFrom: self nilSubclassSample.
+            classSide := self requestFrom: self classSideSample.
             r := class execute.
             nilr := nilSubclass execute.
+            classr := classSide execute
         ]
 
         testSuperclass [
@@ -154,22 +160,44 @@ Namespace current: Shampoo [
                  should: [vars includes: 'c']
         ]
 
-        testClassvars [
+        performClassVarsTestFor: aResponse [
             | vars |
-            vars := r items at: 'classvar'.
+            vars := aResponse items at: 'classvar'.
             self should: [vars includes: 'one'];
                  should: [vars includes: 'two'];
                  should: [vars includes: 'three']
         ]
 
+        testClassvars [
+            self performClassVarsTestFor: r
+        ]
+
+        testClassSideInstvars [
+            | vars |
+            vars := classr items at: 'instvar'.
+            self should: [vars includes: 'd'];
+                 shouldnt: [vars includes: 'a'];
+                 shouldnt: [vars includes: 'b'];
+                 shouldnt: [vars includes: 'c']
+        ]
+
+        testClassSideClassvars [
+            self performClassVarsTestFor: classr
+        ]
+
         classSample [
             ^'<request id="15" type="Class" namespace="ShampooSamples"
-               class="SampleClassA" />'
+               class="SampleClassA" side="instance"/>'
         ]
 
         nilSubclassSample [
             ^'<request id="15" type="Class" namespace="ShampooSamples"
-               class="SampleClassE" />'
+               class="SampleClassE" side="instance"/>'
+        ]
+
+        classSideSample [
+            ^'<request id="15" type="Class" namespace="ShampooSamples"
+               class="SampleClassA" side="class"/>'
         ]
     ]
 

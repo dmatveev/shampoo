@@ -9,6 +9,7 @@
 | 25 Apr 2011 | Dmitry Matveev | Added "classvar" and "poolvar" subnodes to "Class"/"CompileClass"   |
 | 27 Apr 2011 | Dmitry Matveev | New format for aggregated responses and requests, etc               |
 | 13 May 2011 | Dmitry Matveev | Added "superclass" attribute to "Class" response                    |
+| 28 May 2011 | Dmitry Matveev | Added "side" attribute to "Class" request                           |
 
 * Overview
 
@@ -112,8 +113,12 @@ Ask server to send us a class description from a concrete namespace
 *** Syntax
 
 #+BEGIN_EXAMPLE
-  <request id="15" type="Class" namespace="ConcreteNamespace" class="ConcreteClass" />
+  <request id="15" type="Class" namespace="ConcreteNamespace" class="ConcreteClass" side="instance"/>
 #+END_EXAMPLE
+
+  SIDE option may have two possible values:
+  - "instance" - request for instance-side class information
+  - "class"    - the same for the class side.
 
 *** Response
 See *Class*
