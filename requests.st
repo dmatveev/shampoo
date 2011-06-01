@@ -187,7 +187,7 @@ Namespace current: Shampoo [
     ]
 
     Request subclass: CompileClassRequest [
-        | className superName superSpace spaceName instvars classvars poolvars |
+        | className superName superSpace spaceName instvars classvars poolvars side |
 
         CompileClassRequest class >> is: aString [
             ^aString = 'CompileClass'
@@ -196,41 +196,52 @@ Namespace current: Shampoo [
         init: anXML [
             | attrs fetchBlock |
             attrs := anXML attrMap.
+            side := (attrs at: 'side' ifAbsent: ['instance']) asSymbol.
+
+            fetchBlock := [:type | (anXML elementsNamed: type) collect:
+                                   [:each | each characterData]].
+
+            "This data is common for bost `instance` and `class` sides"
             className := attrs at: 'class'.
             spaceName := attrs at: 'namespace'.
-            superName := attrs at: 'super'.
-            superSpace := attrs at: 'superspace'.
-            fetchBlock := [:type | (anXML elementsNamed: type) collect:
-                                    [:each | each characterData]].
             instvars := fetchBlock value: 'instvar'.
-            classvars := fetchBlock value: 'classvar'.
-            poolvars := fetchBlock value: 'poolvar'.
+
+            side = #instance
+                ifTrue: [superName := attrs at: 'super'.
+                         superSpace := attrs at: 'superspace'.
+                         classvars := fetchBlock value: 'classvar'.
+                         poolvars := fetchBlock value: 'poolvar']
         ]
 
         execute [
             | parent class currentSpace targetSpace failed |
 
-            "Looks a bit kludgy, but currently I dont know how to make it better
-             TODO: refactor"
-
-            currentSpace := Namespace current.
             targetSpace := Smalltalk at: spaceName asSymbol.
-
             class := targetSpace at: className asSymbol ifAbsent: [nil].
-            parent := (Smalltalk at: superSpace asSymbol) at: superName asSymbol.
-
             failed := false.
-            Namespace current: targetSpace.
 
-            [class := parent
-                subclass: className asSymbol
-                instanceVariableNames: instvars elementsString
-                classVariableNames: classvars elementsString
-                poolDictionaries: '' "poolvars elementsString"
-                category: ''
-            ] on: Exception do: [:e | e inspect. failed := true].
+            side = #instance
+                ifTrue: ["Looks a bit kludgy, but currently I dont know how to make it better
+                          TODO: refactor"
+                         currentSpace := Namespace current.
 
-            Namespace current: currentSpace.
+                         parent := (Smalltalk at: superSpace asSymbol) at: superName asSymbol.
+
+                         Namespace current: targetSpace.
+
+                         [class := parent
+                            subclass: className asSymbol
+                            instanceVariableNames: instvars elementsString
+                            classVariableNames: classvars elementsString
+                            poolDictionaries: '' " poolvars elementsString "
+                            category: ''.
+                         ] on: Exception do: [:e | e inspect. failed := true].
+
+                         Namespace current: currentSpace]
+
+                ifFalse: [class := targetSpace at: className asSymbol ifAbsent: [nil].
+                          [class class instanceVariableNames: instvars elementsString]
+                              on: Exception do: [:e | e inspect. failed := true]].
 
             failed
                 ifTrue: [^OperationalResponse failure: id]

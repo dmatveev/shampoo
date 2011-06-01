@@ -10,6 +10,7 @@
 | 27 Apr 2011 | Dmitry Matveev | New format for aggregated responses and requests, etc               |
 | 13 May 2011 | Dmitry Matveev | Added "superclass" attribute to "Class" response                    |
 | 28 May 2011 | Dmitry Matveev | Added "side" attribute to "Class" request                           |
+| 01 Jun 2011 | Dmitry Matveev | Added "side" attribute to "CompileClass" request + details          |
 
 * Overview
 
@@ -204,7 +205,7 @@ Compile a new class. Or recompile it, if a class is already exist.
 *** Syntax
 
 #+BEGIN_EXAMPLE
-  <request id="80" type="CompileClass" superspace="SuperNamespace" super="SuperClassName" namespace="SomeNamespace" class="SomeClass">
+  <request id="80" type="CompileClass" superspace="SuperNamespace" super="SuperClassName" namespace="SomeNamespace" class="SomeClass" side="instance">
       <instvar>one</instvar>
       <instvar>two</instvar>
       <instvar>three</instvar>
@@ -219,7 +220,17 @@ Compile a new class. Or recompile it, if a class is already exist.
 
 Instance variables must be registered in the class in the order specified by message.
 
-*** TODO add class variables in the request
+A class side can also be "compiled", but it is actually a modification, not a creation of a new class. So some parameters can be omitted in this case:
+
+#+BEGIN_EXAMPLE
+  <request id="80" type="CompileClass" namespace="SomeNamespace" class="SomeClass" side="class">
+      <instvar>one</instvar>
+      <instvar>two</instvar>
+      <instvar>three</instvar>
+  </request>
+#+END_EXAMPLE
+
+The side argument is optional, if not specified, the request will be considered as an "instance" one.
 
 *** Response
 See *OperationalResoponse*

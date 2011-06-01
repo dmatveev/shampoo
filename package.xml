@@ -20,6 +20,7 @@
     <sunit>Shampoo.MethodsTest</sunit>
     <sunit>Shampoo.MethodTest</sunit>
     <sunit>Shampoo.CompileClassTest</sunit>
+    <sunit>Shampoo.CompileClassSideTest</sunit>
     <sunit>Shampoo.CompileMethodTest</sunit>
     <filein>tests.st</filein>
   </test>

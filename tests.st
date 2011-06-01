@@ -47,6 +47,9 @@ Namespace current: Smalltalk [
 
         nil subclass: SampleClassE [
         ]
+
+        Object subclass: SampleClassSide [
+        ]
     ]
 ]
 
@@ -282,10 +285,10 @@ Namespace current: Shampoo [
         setUp [
             compileClass := self requestFrom: self compileClassSample.
             r := compileClass execute.
-            compiledClass := ShampooSamples at: #SampleClassC
+            compiledClass := ShampooSamples at: #SampleClassC.
         ]
 
-        tesCompiledClass [
+        testCompiledClass [
             self should: [compiledClass ~= nil]
         ]
 
@@ -316,6 +319,32 @@ Namespace current: Shampoo [
       <poolvar>poolOne</poolvar>
       <poolvar>poolTwo</poolvar>
       <poolvar>poolThree</poolvar>
+  </request>'
+        ]
+    ]
+
+    ShampooTestCase subclass: CompileClassSideTest [
+        | classSide rside classSideResult |
+
+        setUp [
+            classSide := self requestFrom: self classSideSample.
+            rside := classSide execute.
+            classSideResult := ShampooSamples.SampleClassSide class
+        ]
+
+        testClassInstVars [
+            | vars |
+            vars := classSideResult instVarNames asStringArray.
+            self should: [vars includes: 'classOne'];
+                 should: [vars includes: 'classTwo'];
+                 should: [vars includes: 'classThree']
+        ]
+
+        classSideSample [
+            ^'<request id="80" type="CompileClass" namespace="ShampooSamples" class="SampleClassSide" side="class">
+      <instvar>classOne</instvar>
+      <instvar>classTwo</instvar>
+      <instvar>classThree</instvar>
   </request>'
         ]
     ]
