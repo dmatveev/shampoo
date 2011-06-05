@@ -3,7 +3,8 @@
 
   <prereq>TCP</prereq>
   <prereq>XML</prereq>
-  <prereq>XML-PullParser</prereq>  
+  <prereq>XML-PullParser</prereq>
+  <prereq>Digest</prereq>
 
   <namespace>Shampoo</namespace>
 
@@ -13,6 +14,7 @@
   <filein>server.st</filein>
 
   <test>
+    <sunit>Shampoo.LoginTest</sunit>
     <sunit>Shampoo.NamespacesTest</sunit>
     <sunit>Shampoo.ClassesTest</sunit>
     <sunit>Shampoo.ClassTest</sunit>

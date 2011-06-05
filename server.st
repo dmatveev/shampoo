@@ -11,6 +11,9 @@ Namespace current: Shampoo [
     Exception subclass: ClientDisconnected [
     ]
 
+    Exception subclass: FatalError [
+    ]
+
     Object subclass: RequestFetcher [
         | sock stanza |
 
@@ -42,18 +45,72 @@ Namespace current: Shampoo [
         ]
     ]
 
-    Object subclass: ClientConnection [
-        | sock disconnectedHandler |
+    Object subclass: ConnectionState [
+        | connection |
 
-        ClientConnection class >> on: aSocket onDisconnect: aBlock[
+        ConnectionState class >> of: aConnection [
             <category: 'instance creation'>
-            ^self new on: aSocket onDisconnect: aBlock
+            ^(self new)
+                connection: aConnection;
+                yourself
+        ]
+
+        connection: aConnection [
+            <category: 'private'>
+            connection := aConnection
+        ]
+
+        switchTo: aConnectionStateClass [
+            <category: 'fsm'>
+            connection state: (aConnectionStateClass of: connection)
+        ]
+
+        process: aRequest [
+            <category: 'fsm'>
+            self subclassResponsibility
+        ]
+    ]
+
+    ConnectionState subclass: NotAuthorizedState [
+        process: aRequest [
+            "Anti-If campaign probably hates me."
+            aRequest class == LoginRequest
+                ifTrue: [^self checkLogin: aRequest]
+                ifFalse: [self fatal]
+        ]
+
+        checkLogin: aRequest [
+            "Really hates."
+            connection server creds = aRequest creds
+                ifTrue: [self switchTo: AuthorizedState.
+                         ^ServerInfoResponse id: aRequest id]
+                ifFalse: [self fatal]
+        ]
+
+        fatal [
+            FatalError new signal
+        ]
+    ]
+
+    ConnectionState subclass: AuthorizedState [
+        process: aRequest [
+            ^aRequest execute
+        ]
+    ]
+
+    Object subclass: ClientConnection [
+        | sock server disconnectedHandler state |
+
+        ClientConnection class >> on: aSocket onDisconnect: aBlock parent: aServer [
+            <category: 'instance creation'>
+            ^self new on: aSocket onDisconnect: aBlock parent: aServer
         ]
         
-        on: aSocket onDisconnect: aBlock [
+        on: aSocket onDisconnect: aBlock parent: aServer [
             <category: 'private'>
             sock := aSocket.
-            disconnectedHandler := aBlock
+            server := aServer.
+            disconnectedHandler := aBlock.
         ]
 
         go [
@@ -70,13 +127,81 @@ Namespace current: Shampoo [
         process: anXMLRequest [
             | r |
             r := Request from: anXMLRequest root.
-            r execute asXML printOn: sock.
-            sock flush
+            [(self state process: r) asXML printOn: sock.
+             sock flush] on: FatalError do: [:e | self drop]
+        ]
+
+        state: aClientConnectionState [
+            <category: 'fsm'>
+            state := aClientConnectionState
+        ]
+
+        state [
+            <category: 'fsm'>
+            ^state ifNil: [state := NotAuthorizedState of: self]
+        ]
+
+        drop [
+            sock close.
+            self signalDisconnected
+        ]
+
+        server [
+            <category: 'accessors'>
+            ^server
+        ]
+    ]
+
+    Object subclass: UserCreds [
+        | login passHash |
+
+        UserCreds class >> login: aLogin pass: aPass [
+            <category: 'instance creation'>
+            ^(self new)
+                login: aLogin;
+                pass: aPass;
+                yourself
+        ]
+
+        UserCreds class >> login: aLogin passHash: aString [
+            <category: 'instance creation'>
+            ^(self new)
+                login: aLogin;
+                passHash: aString;
+                yourself
+        ]
+
+        UserCreds class >> fromXML: anXML [
+            ^UserCreds
+                login: (anXML attrMap at: 'login')
+                passHash: (anXML attrMap at: 'pass')
+        ]
+
+        login: aLogin [
+            <category: 'private'>
+            login := aLogin.
+        ]
+
+        pass: aPass [
+            passHash := (MD5 new: aPass) hexDigest.
+        ]
+
+        passHash: aString [
+            passHash := aString
+        ]
+
+        hash [
+            <category: 'equality'>
+            ^login hash bitXor: passHash hash
+        ]
+
+        = aCreds [
+            ^(self hash = aCreds hash)
         ]
     ]
 
     Object subclass: ShampooServer [
-        | server clients clientsMutex |
+        | server clients clientsMutex creds |
 
         clients [
             ^clients ifNil: [clients := OrderedCollection new]
@@ -87,7 +212,8 @@ Namespace current: Shampoo [
             | client |
             client := ClientConnection
                 on: server accept
-                onDisconnect: [:client | self handleDisconnected: client].
+                onDisconnect: [:client | self handleDisconnected: client]
+                parent: self.
             clientsMutex critical: [self clients add: client].
             ^client
         ]
@@ -97,19 +223,29 @@ Namespace current: Shampoo [
             clientsMutex critical: [self clients remove: aClient]
         ]
 
-        startOn: aPort [
+        startOn: aPort creds: aCreds [
             <category: 'private'>
             clientsMutex := Semaphore forMutualExclusion.
             server := TCP.ServerSocket port: aPort.
+            creds := aCreds.
 
             [server isOpen] whileTrue:
                 [server waitForConnection.
                  [self acceptedClient go] fork]
         ]
 
-        ShampooServer class >> startOn: aPort [
+        ShampooServer class >> startOn: aPort login: aLogin pass: aPass [
             <category: 'instance creation'>
-            [self new startOn: aPort] fork
+            ^self startOn: aPort creds: (UserCreds login: aLogin pass: aPass)
+        ]
+
+        ShampooServer class >> startOn: aPort creds: aCreds [
+            <category: 'instance creation'>
+            [self new startOn: aPort creds: aCreds] fork
+        ]
+
+        creds [
+            ^creds
         ]
     ]
 ]
