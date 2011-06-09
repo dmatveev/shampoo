@@ -11,6 +11,7 @@
 | 13 May 2011 | Dmitry Matveev | Added "superclass" attribute to "Class" response                    |
 | 28 May 2011 | Dmitry Matveev | Added "side" attribute to "Class" request                           |
 | 01 Jun 2011 | Dmitry Matveev | Added "side" attribute to "CompileClass" request + details          |
+| 09 Jun 2011 | Dmitry Matveev | Authorization & server info requests/responses                      |
 
 * Overview
 
@@ -77,6 +78,26 @@ always match the appropriate request ID, and the response body (3) is determined
 by response type (2).
   
 * Requests
+
+** Login
+
+*** Description
+Provide credentials to server for authorization.
+
+*** Syntax
+
+#+BEGIN_EXAMPLE
+  <request id="25" type="Login">
+    <creds login="dmitry" pass="1a1dc91c907325c69271ddf0c944bc72" />
+  </request>
+#+END_EXAMPLE
+
+Pass field is an MD5 hash of an actual password. This scheme is quite unsecure and
+will be improved later.
+
+*** Response
+In the case of successful authorization server will reply with *Info* response.
+The connection will be closed otherwise.
 
 ** Namespaces
 
@@ -379,3 +400,14 @@ As for CompileMethod request, to preserve XML parser from being broken, all
 suspicious symbols (such as &, >, < and others) must be escaped before
 sending (to &amp; &lt; &gt; etc).
 
+** Info
+
+*** Description
+A string with server information. The information contents is backend-dependent, but
+usually it is an image/system version.
+
+#+BEGIN_EXAMPLE
+  <response id="25" type="Info">
+    GNU Smalltalk version 3.2.3-4f40165
+  </response>
+#+END_EXAMPLE

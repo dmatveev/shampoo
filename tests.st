@@ -1,7 +1,3 @@
-Eval [
-    PackageLoader fileInPackages: #(#Shampoo #SUnit).
-]
-
 Namespace current: Smalltalk [
     Namespace current: ShampooSamples [
         Object subclass: SampleClassA [
@@ -87,6 +83,24 @@ Namespace current: Shampoo [
                         processDocumentString: aString
                         beforeScanDo: [:p | p validate: false].
             ^Request from: xml root
+        ]
+    ]
+
+    ShampooTestCase subclass: LoginTest [
+        | login server |
+
+        setUp [
+            login := self requestFrom: self loginSample.
+        ]
+
+        testCreds [
+            self should: [login creds = (UserCreds login: 'dmitry' pass: 'pass')]
+        ]
+
+        loginSample [
+            ^'<request id="25" type="Login">
+      <creds login="dmitry" pass="1a1dc91c907325c69271ddf0c944bc72" />
+  </request>'
         ]
     ]
 

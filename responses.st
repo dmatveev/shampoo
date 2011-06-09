@@ -25,6 +25,18 @@ Namespace current: Shampoo [
         ]
     ]
 
+    Response subclass: ServerInfoResponse [
+        type [
+            ^'Info'
+        ]
+
+        asXML [
+            ^(super asXML)
+                addNode: (XML.Text text: Smalltalk version);
+                yourself
+        ]
+    ]
+
     Response subclass: OperationalResponse [
         | success |
 

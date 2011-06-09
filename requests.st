@@ -22,12 +22,32 @@ Namespace current: Shampoo [
             id := anInteger
         ]
 
+        id [
+            ^id
+        ]
+
         init: anXML [
             "Default implementation, do nothing"
         ]
 
         execute [
             ^self subclassResponsibility
+        ]
+    ]
+
+    Request subclass: LoginRequest [
+        | creds |
+
+        LoginRequest class >> is: aString [
+            ^aString = 'Login'
+        ]
+
+        init: anXML [
+            creds := UserCreds fromXML: (anXML elementsNamed: 'creds') first.
+        ]
+
+        creds [
+            ^creds
         ]
     ]
 
