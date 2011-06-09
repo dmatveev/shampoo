@@ -20,12 +20,12 @@ Namespace current: Shampoo [
         oldAssoc := nil.
 
         ShampooTranscript class >> message: aString [
-            oldAssoc ifNotNil: [oldAssoc key perform: oldAssoc value with: aString].
-            serversMutex critical: [servers do: [:each | self echo: aString on: each]]
+            self fallback: aString.
+            serversMutex critical: [servers do: [:each | each echo: aString]]
         ]
 
-        ShampooTranscript class >> echo: aString on: aServer [
-            aServer clientsDo: [:each | each echo: aString]
+        ShampooTranscript class >> fallback: aString [
+            oldAssoc ifNotNil: [oldAssoc key perform: oldAssoc value with: aString].
         ]
 
         ShampooTranscript class >> add: aServer [
@@ -244,10 +244,6 @@ Namespace current: Shampoo [
             ^clients ifNil: [clients := OrderedCollection new]
         ]
 
-		clientsDo: aBlock [
-			clientsMutex critical: [self clients do: aBlock]
-		]
-
         acceptedClient [
             <category: 'private'>
             | client |
@@ -274,6 +270,10 @@ Namespace current: Shampoo [
                  [self acceptedClient go] fork]
         ]
 
+        echo: aString [
+            clientsMutex critical: [self clients do: [:each | each echo: aString]]
+        ]
+
         ShampooServer class >> startOn: aPort login: aLogin pass: aPass [
             <category: 'instance creation'>
             ^self startOn: aPort creds: (UserCreds login: aLogin pass: aPass)
@@ -283,8 +283,8 @@ Namespace current: Shampoo [
             <category: 'instance creation'>
             [| srv |
              srv := self new.
-             srv startOn: aPort creds: aCreds.
-             ShampooTranscript add: srv] fork
+             ShampooTranscript add: srv.
+             srv startOn: aPort creds: aCreds] fork
         ]
 
         creds [
