@@ -246,6 +246,30 @@ Namespace current: Shampoo [
         ]
     ]
 
+    Response subclass: EchoResponse [
+        | text |
+
+        EchoResponse class >> id: anInteger text: aString [
+            ^(self id: anInteger)
+                text: aString;
+                yourself
+        ]
+
+        text: aString [
+            text := aString
+        ]
+
+        type [
+            ^'Echo'
+        ]
+
+        asXML [
+            ^(super asXML)
+                addNode: (XML.Text text: text);
+                yourself
+        ]
+    ]
+
     Eval [
         {   NamespacesResponse.
             ClassesResponse.
