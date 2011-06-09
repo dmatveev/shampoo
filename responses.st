@@ -241,7 +241,7 @@ Namespace current: Shampoo [
 
         asXML [
             ^(super asXML)
-                addNote: (XML.Text text: value printString);
+                addNode: (XML.Text text: value printString);
                 yourself
         ]
     ]
