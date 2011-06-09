@@ -294,4 +294,39 @@ Namespace current: Shampoo [
             ^OperationalResponse success: id
         ]
     ]
+
+    Request subclass: DoItRequest [
+        | code |
+
+        DoItRequest class >> is: aString [
+            ^aString = 'DoIt'
+        ]
+
+        init: anXML [
+            code := anXML characterData
+        ]
+
+        execute [
+            Behavior evaluate: code ifError: [^OperationalResponse failure: id].
+            ^OperationalResponse success: id
+        ]
+    ]
+
+    Request subclass: PrintItRequest [
+        | code |
+
+        PrintItRequest class >> is: aString [
+            ^aString = 'PrintIt'
+        ]
+
+        init: anXML [
+            code := anXML characterData
+        ]
+
+        execute [
+            | s |
+            s := Behavior evaluate: code ifError: [OperationalResponse failure: id].
+            ^PrintItResponse id: id value: s
+        ]
+    ]
 ]

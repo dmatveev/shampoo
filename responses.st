@@ -218,6 +218,34 @@ Namespace current: Shampoo [
         ]
     ]
 
+    Response subclass: PrintItResponse [
+        | value |
+
+        PrintItResponse class >> id: anInteger value: anObject [
+            ^(self id: anInteger)
+                value: anObject;
+                yourself
+        ]
+
+        value: anObject [
+            value := anObject
+        ]
+
+        value [
+            ^value
+        ]
+
+        type [
+            ^'PrintIt'
+        ]
+
+        asXML [
+            ^(super asXML)
+                addNote: (XML.Text text: value printString);
+                yourself
+        ]
+    ]
+
     Eval [
         {   NamespacesResponse.
             ClassesResponse.
