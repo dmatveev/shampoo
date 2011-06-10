@@ -14,6 +14,37 @@ Namespace current: Shampoo [
     Exception subclass: FatalError [
     ]
 
+    Object subclass: ShampooTranscript [
+        servers := Set new.
+        serversMutex := Semaphore forMutualExclusion.
+        oldAssoc := nil.
+
+        ShampooTranscript class >> message: aString [
+            self fallback: aString.
+            serversMutex critical: [servers do: [:each | each echo: aString]]
+        ]
+
+        ShampooTranscript class >> fallback: aString [
+            oldAssoc ifNotNil: [oldAssoc key perform: oldAssoc value with: aString].
+        ]
+
+        ShampooTranscript class >> add: aServer [
+            serversMutex critical: [servers add: aServer]
+        ]
+            
+        ShampooTranscript class >> remove: aServer [
+            serversMutex critical: [servers remove: aServer]
+        ]
+    
+        ShampooTranscript class >> install [
+            | message |
+            message := Transcript message.
+            (message key = ShampooTranscript and: [message value = #message:])
+                ifFalse: [oldAssoc := message.
+                          Transcript message: (ShampooTranscript -> #message:)]
+        ]
+    ]
+
     Object subclass: RequestFetcher [
         | sock stanza |
 
@@ -40,7 +71,7 @@ Namespace current: Shampoo [
                 [stanza nextPutAll: (sock upTo: $>); nextPut: $>.
                  [^self parsed]
                     on: XML.MalformedSignal
-                    do: [:e | Transcript << 'Incomplete stanza, waiting...'; nl]].
+                    do: [:e | nil]].
             sock isPeerAlive ifFalse: [ClientDisconnected new signal]
         ]
     ]
@@ -141,6 +172,11 @@ Namespace current: Shampoo [
             ^state ifNil: [state := NotAuthorizedState of: self]
         ]
 
+        echo: aString [
+            (EchoResponse id: -1 text: aString) asXML printOn: sock.
+            sock flush
+        ]
+
         drop [
             sock close.
             self signalDisconnected
@@ -204,6 +240,7 @@ Namespace current: Shampoo [
         | server clients clientsMutex creds |
 
         clients [
+            <category: 'private'>
             ^clients ifNil: [clients := OrderedCollection new]
         ]
 
@@ -219,7 +256,6 @@ Namespace current: Shampoo [
         ]
 
         handleDisconnected: aClient [
-            Transcript << 'The client has been disconnected'; nl.
             clientsMutex critical: [self clients remove: aClient]
         ]
 
@@ -234,6 +270,10 @@ Namespace current: Shampoo [
                  [self acceptedClient go] fork]
         ]
 
+        echo: aString [
+            clientsMutex critical: [self clients do: [:each | each echo: aString]]
+        ]
+
         ShampooServer class >> startOn: aPort login: aLogin pass: aPass [
             <category: 'instance creation'>
             ^self startOn: aPort creds: (UserCreds login: aLogin pass: aPass)
@@ -241,11 +281,18 @@ Namespace current: Shampoo [
 
         ShampooServer class >> startOn: aPort creds: aCreds [
             <category: 'instance creation'>
-            [self new startOn: aPort creds: aCreds] fork
+            [| srv |
+             srv := self new.
+             ShampooTranscript add: srv.
+             srv startOn: aPort creds: aCreds] fork
         ]
 
         creds [
             ^creds
         ]
     ]
+]
+
+Eval [
+    Shampoo.ShampooTranscript install.
 ]

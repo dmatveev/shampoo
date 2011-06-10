@@ -385,4 +385,41 @@ Namespace current: Shampoo [
   </request>'
         ]
     ]
+
+    ShampooTestCase subclass: DoItTest [
+        | doit |
+
+        setUp [
+            ShampooSamples at: #someUniqueKeyForDoIt put: nil.
+            doit := self requestFrom: self doItSample.
+        ]
+
+        testDoIt [
+            | r |
+            r := doit execute.
+            self should: [42 = (ShampooSamples at: #someUniqueKeyForDoIt)];
+                 should: [r statusString = 'success']
+        ]
+        doItSample [
+            ^'<request id="80" type="DoIt">ShampooSamples at: #someUniqueKeyForDoIt put: 42</request>'
+        ]
+    ]
+
+    ShampooTestCase subclass: PrintItTest [
+        | printit |
+
+        setUp [
+            printit := self requestFrom: self printItSample
+        ]
+
+        testPrintIt [
+            | r |
+            r := printit execute.
+            self should: [r value = 8]
+        ]
+
+        printItSample [
+            ^'<request id="80" type="PrintIt">2 + 2 * 2</request>'
+        ]
+    ]
 ]
