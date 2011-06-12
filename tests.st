@@ -253,10 +253,11 @@ Namespace current: Shampoo [
     ]
 
     ShampooTestCase subclass: MethodsTest [
-        | methods |
+        | methods asterisk |
 
         setUp [
-            methods := self requestFrom: self methodsSample
+            methods := self requestFrom: self methodsSample.
+            asterisk := self requestFrom: self asteriskSample.
         ]
 
         testMethods [
@@ -264,12 +265,29 @@ Namespace current: Shampoo [
             r := methods execute.
             items := r items at: 'method'.
             self should: [items includes: 'doSomethingElse:withArg:'];
-                 should: [items includes: 'doSomething']
+                 should: [items includes: 'doSomething'];
+                 shouldnt: [items includes: 'foo'];
+                 shouldnt: [items includes: 'bar']
+        ]
+
+        testAsterisk [
+            | r items |
+            r := asterisk execute.
+            items := r items at: 'method'.
+            self should: [items includes: 'doSomethingElse:withArg:'];
+                 should: [items includes: 'doSomething'];
+                 should: [items includes: 'foo'];
+                 should: [items includes: 'bar']
         ]
 
         methodsSample [
             ^'<request id="500" type="Methods" namespace="ShampooSamples"
                class="SampleClassB" side="instance" category="sample-category"/>'
+        ]
+
+        asteriskSample [
+            ^'<request id="500" type="Methods" namespace="ShampooSamples"
+               class="SampleClassB" side="instance" category="*"/>'
         ]
     ]
 

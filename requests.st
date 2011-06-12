@@ -145,7 +145,7 @@ Namespace current: Shampoo [
     ]
 
     Request subclass: MethodsRequest [
-        | className spaceName side category |
+        | className spaceName side cat |
 
         MethodsRequest class >> is: aString [
             ^aString = 'Methods'
@@ -157,16 +157,19 @@ Namespace current: Shampoo [
             className := attrs at: 'class'.
             spaceName := attrs at: 'namespace'.
             side := (attrs at: 'side') asSymbol.
-            category := attrs at: 'category'
+            cat := attrs at: 'category'
         ]
 
         execute [
-            | class methods |
+            | class methods allMethods |
             class := (Smalltalk at: spaceName asSymbol) at: className asSymbol.
             (side = #class) ifTrue: [class := class class].
 
-            methods := class methodDictionary associations select:
-                        [:each | each value descriptor category = category].
+            allMethods := class methodDictionary ifNil: [#()] ifNotNil: [:x | x associations].
+
+            methods := (cat = '*'
+                ifTrue: [allMethods]
+                ifFalse: [allMethods select: [:e | e value descriptor category = cat]]).
 
             ^MethodsResponse
                 id: id
