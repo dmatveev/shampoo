@@ -405,11 +405,12 @@ Namespace current: Shampoo [
     ]
 
     ShampooTestCase subclass: DoItTest [
-        | doit |
+        | doit locals |
 
         setUp [
             ShampooSamples at: #someUniqueKeyForDoIt put: nil.
             doit := self requestFrom: self doItSample.
+            locals := self requestFrom: self localsDoItSample.
         ]
 
         testDoIt [
@@ -418,8 +419,27 @@ Namespace current: Shampoo [
             self should: [42 = (ShampooSamples at: #someUniqueKeyForDoIt)];
                  should: [r statusString = 'success']
         ]
+
+        testWithLocals [
+            | r |
+            r := locals execute.
+            self should: ['149' = (ShampooSamples at: #someUniqueKeyForLocals)]
+        ]
+
         doItSample [
             ^'<request id="80" type="DoIt">ShampooSamples at: #someUniqueKeyForDoIt put: 42</request>'
+        ]
+
+        localsDoItSample [
+            ^'<request id="80" type="DoIt">
+            | c d |
+            c := OrderedCollection new.
+            c add: 1; add: 2; add: 3.
+            d := (c collect: [:e | e squared])
+                inject: String new
+                into: [:a :e | a, e asString].
+            ShampooSamples at: #someUniqueKeyForLocals put: d
+            </request>'
         ]
     ]
 

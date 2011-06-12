@@ -6,7 +6,8 @@ Namespace current: Shampoo [
         Request class >> from: anXML [
             | attrs class |
             attrs := anXML attrMap.
-            class := Request subclasses detect: [:each | each is: (attrs at: 'type')].
+            class := Request allSubclasses detect:
+                [:each | (each respondsTo: #is:) and: [each is: (attrs at: 'type')]].
             ^(class new: (attrs at: 'id') asInteger)
                 init: anXML;
                 yourself
@@ -298,37 +299,42 @@ Namespace current: Shampoo [
         ]
     ]
 
-    Request subclass: DoItRequest [
+    Exception subclass: EvalFailure [
+    ]
+
+    Request subclass: EvalRequest [
         | code |
 
+        init: anXML [
+            code := '[', anXML characterData, '] value'
+        ]
+
+        execute [
+            ^Behavior evaluate: code ifError: [EvalFailure new signal].
+        ]
+    ]
+
+    EvalRequest subclass: DoItRequest [
         DoItRequest class >> is: aString [
             ^aString = 'DoIt'
         ]
 
-        init: anXML [
-            code := anXML characterData
-        ]
-
         execute [
-            Behavior evaluate: code ifError: [^OperationalResponse failure: id].
+            [super execute] on: EvalFailure do: [:e | ^OperationalResponse failure: id].
             ^OperationalResponse success: id
         ]
     ]
 
-    Request subclass: PrintItRequest [
+    EvalRequest subclass: PrintItRequest [
         | code |
 
         PrintItRequest class >> is: aString [
             ^aString = 'PrintIt'
         ]
 
-        init: anXML [
-            code := anXML characterData
-        ]
-
         execute [
             | s |
-            s := Behavior evaluate: code ifError: [OperationalResponse failure: id].
+            [s := super execute] on: EvalFailure do: [:e | ^OperationalResponse failure: id].
             ^PrintItResponse id: id value: s
         ]
     ]
