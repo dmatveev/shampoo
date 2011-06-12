@@ -12,6 +12,7 @@
 | 28 May 2011 | Dmitry Matveev | Added "side" attribute to "Class" request                           |
 | 01 Jun 2011 | Dmitry Matveev | Added "side" attribute to "CompileClass" request + details          |
 | 09 Jun 2011 | Dmitry Matveev | Authorization & server info requests/responses                      |
+| 12 Jun 2011 | Dmitry Matveev | Added '*' support for Method request                                |
 
 * Overview
 
@@ -191,7 +192,8 @@ concrete class.
   - "class"    - the same for the class side.
 
   CATEGORY option value should exist in the list of categories obtained from
-  Categories message.
+  Categories message. CATEGORY also may be '*', in this case server should return
+  all the available methods.
 
 *** Response
 See *Methods*
