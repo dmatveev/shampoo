@@ -87,19 +87,21 @@ Namespace current: Shampoo [
     ]
 
     ShampooTestCase subclass: LoginTest [
-        | login server |
+        | login server info |
 
         setUp [
+            "Magic is 1337"
+            info := AuthInfo login: 'dmitry' pass: 'pass'.
             login := self requestFrom: self loginSample.
         ]
 
         testCreds [
-            self should: [login creds = (UserCreds login: 'dmitry' pass: 'pass')]
+            self should: [login creds = (info with: 1337)]
         ]
 
         loginSample [
             ^'<request id="25" type="Login">
-      <creds login="dmitry" pass="1a1dc91c907325c69271ddf0c944bc72" />
+      <creds login="dmitry" magic="0bf2f198be57c763af1c9a6f2359fdc8" />
   </request>'
         ]
     ]

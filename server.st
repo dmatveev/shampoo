@@ -103,6 +103,13 @@ Namespace current: Shampoo [
     ]
 
     ConnectionState subclass: NotAuthorizedState [
+        | magic |
+
+        register [
+            "Send a magic number to a client"
+            connection send: (MagicResponse number: self magic)
+        ]
+
         process: aRequest [
             "Anti-If campaign probably hates me."
             aRequest class == LoginRequest
@@ -112,7 +119,7 @@ Namespace current: Shampoo [
 
         checkLogin: aRequest [
             "Really hates."
-            connection server creds = aRequest creds
+            (connection server creds with: self magic) = aRequest creds
                 ifTrue: [self switchTo: AuthorizedState.
                          ^ServerInfoResponse id: aRequest id]
                 ifFalse: [self fatal]
@@ -120,6 +127,11 @@ Namespace current: Shampoo [
 
         fatal [
             FatalError new signal
+        ]
+
+        magic [
+            <category: 'private'>
+            ^magic ifNil: [magic := Random between: 0 and: 16rFFFFFFFF]
         ]
     ]
 
@@ -142,6 +154,7 @@ Namespace current: Shampoo [
             sock := aSocket.
             server := aServer.
             disconnectedHandler := aBlock.
+            self state register
         ]
 
         go [
@@ -177,6 +190,11 @@ Namespace current: Shampoo [
             sock flush
         ]
 
+        send: aPacket [
+            aPacket asXML printOn: sock.
+            sock flush
+        ]
+
         drop [
             sock close.
             self signalDisconnected
@@ -188,51 +206,51 @@ Namespace current: Shampoo [
         ]
     ]
 
-    Object subclass: UserCreds [
+    Object subclass: AuthInfo [
         | login passHash |
 
-        UserCreds class >> login: aLogin pass: aPass [
+        AuthInfo class >> login: aLogin pass: aPass [
             <category: 'instance creation'>
             ^(self new)
-                login: aLogin;
-                pass: aPass;
+                login: aLogin pass: aPass;
                 yourself
         ]
 
-        UserCreds class >> login: aLogin passHash: aString [
-            <category: 'instance creation'>
-            ^(self new)
-                login: aLogin;
-                passHash: aString;
-                yourself
-        ]
-
-        UserCreds class >> fromXML: anXML [
-            ^UserCreds
-                login: (anXML attrMap at: 'login')
-                passHash: (anXML attrMap at: 'pass')
-        ]
-
-        login: aLogin [
+        login: aLogin pass: aPass [
             <category: 'private'>
             login := aLogin.
+            passHash := (MD5 new: aPass) hexDigest
         ]
 
-        pass: aPass [
-            passHash := (MD5 new: aPass) hexDigest.
+        with: aMagic [
+            ^(LoginInfo new)
+                login: login
+                magicHash: (MD5 new: (aMagic printString, passHash)) hexDigest
+        ]
+    ]
+
+    Object subclass: LoginInfo [
+        | login magicHash |
+
+        LoginInfo class >> fromXML: anXML [
+            <category: 'instance creation'>
+            ^(self new)
+                login: (anXML attrMap at: 'login')
+                magicHash: (anXML attrMap at: 'magic');
+                yourself
         ]
 
-        passHash: aString [
-            passHash := aString
+        login: aString magicHash: aHash [
+            login := aString.
+            magicHash := aHash
+        ]
+
+        = aLoginInfo [
+            ^(aLoginInfo class = self class) and: [self hash = aLoginInfo hash]
         ]
 
         hash [
-            <category: 'equality'>
-            ^login hash bitXor: passHash hash
-        ]
-
-        = aCreds [
-            ^(self hash = aCreds hash)
+            ^login hash bitXor: magicHash hash
         ]
     ]
 
@@ -276,7 +294,7 @@ Namespace current: Shampoo [
 
         ShampooServer class >> startOn: aPort login: aLogin pass: aPass [
             <category: 'instance creation'>
-            ^self startOn: aPort creds: (UserCreds login: aLogin pass: aPass)
+            ^self startOn: aPort creds: (AuthInfo login: aLogin pass: aPass)
         ]
 
         ShampooServer class >> startOn: aPort creds: aCreds [
