@@ -73,8 +73,17 @@ Namespace current: Shampoo [
         ]
     ]
 
-    Behavior subclass: AggregatedResponseBehavior [
-        | items |
+    Object subclass: AggregatedResponseDecorator [
+        | items wrapped |
+
+        AggregatedResponseDecorator class >> on: aWrappedObject [
+            <category: 'instance creation'>
+            ^self new on: aWrappedObject
+        ]
+
+        on: aWrappedObject [
+            wrapped := aWrappedObject
+        ]
 
         items [
             ^items ifNil: [items := Dictionary new]
@@ -86,7 +95,7 @@ Namespace current: Shampoo [
 
         asXML [
             | root |
-            root := super asXML.
+            root := wrapped asXML.
 
             self items keysAndValuesDo:
                 [:key :values | values do: [:each |
@@ -96,11 +105,17 @@ Namespace current: Shampoo [
 
             ^root
         ]
+
+        doesNotUnderstand: aMessage [
+            "Proxy an unknown message to an underlying object"
+            ^wrapped perform: aMessage selector
+                     withArguments: aMessage arguments
+        ]
     ]
 
     Response subclass: NamespacesResponse [
         NamespacesResponse class >> id: anInteger names: anArray [
-            ^(self id: anInteger)
+            ^(AggregatedResponseDecorator on: (self id: anInteger))
                 itemsAt: 'namespace' put: anArray;
                 yourself
         ]
@@ -112,7 +127,7 @@ Namespace current: Shampoo [
 
     Response subclass: ClassesResponse [
         ClassesResponse class >> id: anInteger names: anArray [
-            ^(self id: anInteger)
+            ^(AggregatedResponseDecorator on: (self id: anInteger))
                 itemsAt: 'class' put: anArray;
                 yourself
         ]
@@ -156,7 +171,7 @@ Namespace current: Shampoo [
     ClassInfoResponse subclass: ClassResponse [
         ClassResponse class >> id: anInteger class: aClass superclass: aSuperClass
                                instvars: anInstVars classvars: aClassVars poolvars: aPoolDicts [
-            ^(ClassResponse id: anInteger class: aClass attrs: {'superclass' -> aSuperClass})
+            ^(AggregatedResponseDecorator on: (self id: anInteger class: aClass attrs: {'superclass' -> aSuperClass}))
                 itemsAt: 'instvar'  put: anInstVars;
                 itemsAt: 'classvar' put: aClassVars;
                 itemsAt: 'poolvar'  put: aPoolDicts;
@@ -170,7 +185,7 @@ Namespace current: Shampoo [
 
     ClassInfoResponse subclass: MethodCategoriesResponse [
         MethodCategoriesResponse class >> id: anInteger class: aClass categories: anArray [
-            ^(MethodCategoriesResponse id: anInteger class: aClass)
+            ^(AggregatedResponseDecorator on: (self id: anInteger class: aClass))
                 itemsAt: 'category' put: anArray;
                 yourself
         ]
@@ -182,7 +197,7 @@ Namespace current: Shampoo [
 
     ClassInfoResponse subclass: MethodsResponse [
         MethodsResponse class >> id: anInteger class: aClass methods: anArray [
-            ^(self id: anInteger class: aClass)
+            ^(AggregatedResponseDecorator on: (self id: anInteger class: aClass))
                 itemsAt: 'method' put: anArray;
                 yourself
         ]
@@ -268,14 +283,5 @@ Namespace current: Shampoo [
                 addNode: (XML.Text text: text);
                 yourself
         ]
-    ]
-
-    Eval [
-        {   NamespacesResponse.
-            ClassesResponse.
-            ClassResponse.
-            MethodCategoriesResponse.
-            MethodsResponse
-        } do: [:each | each mergeBehaviorFrom: AggregatedResponseBehavior]
     ]
 ]
