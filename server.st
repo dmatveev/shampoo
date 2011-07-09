@@ -1,11 +1,3 @@
-XML.Element extend [
-    attrMap [
-        <category: '*shampoo-accessors'>
-        ^Dictionary from:
-            (self attributes collect: [ :each | each key type -> each value ])
-    ]
-]
-
 Namespace current: Shampoo [
 
     Exception subclass: ClientDisconnected [
@@ -100,6 +92,11 @@ Namespace current: Shampoo [
             <category: 'fsm'>
             self subclassResponsibility
         ]
+
+        echo: aString [
+            <category: 'fsm'>
+            "Do nothing by default. 'self subclassResponsibility' would be better?"
+        ]
     ]
 
     ConnectionState subclass: NotAuthorizedState [
@@ -138,6 +135,10 @@ Namespace current: Shampoo [
     ConnectionState subclass: AuthorizedState [
         process: aRequest [
             ^aRequest execute
+        ]
+
+        echo: aString [
+            connection send: (EchoResponse id: -1 text: aString)
         ]
     ]
 
@@ -186,8 +187,7 @@ Namespace current: Shampoo [
         ]
 
         echo: aString [
-            (EchoResponse id: -1 text: aString) asXML printOn: sock.
-            sock flush
+            self state echo: aString
         ]
 
         send: aPacket [
@@ -203,54 +203,6 @@ Namespace current: Shampoo [
         server [
             <category: 'accessors'>
             ^server
-        ]
-    ]
-
-    Object subclass: AuthInfo [
-        | login passHash |
-
-        AuthInfo class >> login: aLogin pass: aPass [
-            <category: 'instance creation'>
-            ^(self new)
-                login: aLogin pass: aPass;
-                yourself
-        ]
-
-        login: aLogin pass: aPass [
-            <category: 'private'>
-            login := aLogin.
-            passHash := (MD5 new: aPass) hexDigest
-        ]
-
-        with: aMagic [
-            ^(LoginInfo new)
-                login: login
-                magicHash: (MD5 new: (aMagic printString, passHash)) hexDigest
-        ]
-    ]
-
-    Object subclass: LoginInfo [
-        | login magicHash |
-
-        LoginInfo class >> fromXML: anXML [
-            <category: 'instance creation'>
-            ^(self new)
-                login: (anXML attrMap at: 'login')
-                magicHash: (anXML attrMap at: 'magic');
-                yourself
-        ]
-
-        login: aString magicHash: aHash [
-            login := aString.
-            magicHash := aHash
-        ]
-
-        = aLoginInfo [
-            ^(aLoginInfo class = self class) and: [self hash = aLoginInfo hash]
-        ]
-
-        hash [
-            ^login hash bitXor: magicHash hash
         ]
     ]
 

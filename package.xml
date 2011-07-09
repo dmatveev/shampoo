@@ -9,9 +9,16 @@
   <namespace>Shampoo</namespace>
 
   <filein>hacks.st</filein>
+  <filein>auth.st</filein>
   <filein>requests.st</filein>
   <filein>responses.st</filein>
   <filein>server.st</filein>
+
+  <file>hacks.st</file>
+  <file>auth.st</file>
+  <file>requests.st</file>
+  <file>responses.st</file>
+  <file>server.st</file>
 
   <test>
     <sunit>Shampoo.LoginTest</sunit>
@@ -28,9 +35,4 @@
     <sunit>Shampoo.PrintItTest</sunit>
     <filein>tests.st</filein>
   </test>
-
-  <file>hacks.st</file>
-  <file>requests.st</file>
-  <file>responses.st</file>
-  <file>server.st</file>
 </package>
