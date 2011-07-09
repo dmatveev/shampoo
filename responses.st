@@ -284,4 +284,30 @@ Namespace current: Shampoo [
                 yourself
         ]
     ]
+
+    Response subclass: MagicResponse [
+        | number |
+        "Not actually a response, the only request that goes from a server
+         to a client"
+
+        MagicResponse class >> number: anInteger [
+            ^(self id: 0)
+                number: anInteger;
+                yourself
+        ]
+
+        number: anInteger [
+            number := anInteger
+        ]
+
+        type [
+            ^'Magic'
+        ]
+
+        asXML [
+            ^(super asXML)
+                addNode: (XML.Text text: number printString);
+                yourself
+        ]
+    ]
 ]

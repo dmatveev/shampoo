@@ -44,7 +44,7 @@ Namespace current: Shampoo [
         ]
 
         init: anXML [
-            creds := UserCreds fromXML: (anXML elementsNamed: 'creds') first.
+            creds := LoginInfo fromXML: (anXML elementsNamed: 'creds') first.
         ]
 
         creds [

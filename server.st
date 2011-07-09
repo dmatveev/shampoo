@@ -1,11 +1,3 @@
-XML.Element extend [
-    attrMap [
-        <category: '*shampoo-accessors'>
-        ^Dictionary from:
-            (self attributes collect: [ :each | each key type -> each value ])
-    ]
-]
-
 Namespace current: Shampoo [
 
     Exception subclass: ClientDisconnected [
@@ -100,9 +92,21 @@ Namespace current: Shampoo [
             <category: 'fsm'>
             self subclassResponsibility
         ]
+
+        echo: aString [
+            <category: 'fsm'>
+            "Do nothing by default. 'self subclassResponsibility' would be better?"
+        ]
     ]
 
     ConnectionState subclass: NotAuthorizedState [
+        | magic |
+
+        register [
+            "Send a magic number to a client"
+            connection send: (MagicResponse number: self magic)
+        ]
+
         process: aRequest [
             "Anti-If campaign probably hates me."
             aRequest class == LoginRequest
@@ -112,7 +116,7 @@ Namespace current: Shampoo [
 
         checkLogin: aRequest [
             "Really hates."
-            connection server creds = aRequest creds
+            (connection server creds with: self magic) = aRequest creds
                 ifTrue: [self switchTo: AuthorizedState.
                          ^ServerInfoResponse id: aRequest id]
                 ifFalse: [self fatal]
@@ -121,11 +125,20 @@ Namespace current: Shampoo [
         fatal [
             FatalError new signal
         ]
+
+        magic [
+            <category: 'private'>
+            ^magic ifNil: [magic := Random between: 0 and: 16rFFFFFFFF]
+        ]
     ]
 
     ConnectionState subclass: AuthorizedState [
         process: aRequest [
             ^aRequest execute
+        ]
+
+        echo: aString [
+            connection send: (EchoResponse id: -1 text: aString)
         ]
     ]
 
@@ -142,6 +155,7 @@ Namespace current: Shampoo [
             sock := aSocket.
             server := aServer.
             disconnectedHandler := aBlock.
+            self state register
         ]
 
         go [
@@ -173,7 +187,11 @@ Namespace current: Shampoo [
         ]
 
         echo: aString [
-            (EchoResponse id: -1 text: aString) asXML printOn: sock.
+            self state echo: aString
+        ]
+
+        send: aPacket [
+            aPacket asXML printOn: sock.
             sock flush
         ]
 
@@ -185,54 +203,6 @@ Namespace current: Shampoo [
         server [
             <category: 'accessors'>
             ^server
-        ]
-    ]
-
-    Object subclass: UserCreds [
-        | login passHash |
-
-        UserCreds class >> login: aLogin pass: aPass [
-            <category: 'instance creation'>
-            ^(self new)
-                login: aLogin;
-                pass: aPass;
-                yourself
-        ]
-
-        UserCreds class >> login: aLogin passHash: aString [
-            <category: 'instance creation'>
-            ^(self new)
-                login: aLogin;
-                passHash: aString;
-                yourself
-        ]
-
-        UserCreds class >> fromXML: anXML [
-            ^UserCreds
-                login: (anXML attrMap at: 'login')
-                passHash: (anXML attrMap at: 'pass')
-        ]
-
-        login: aLogin [
-            <category: 'private'>
-            login := aLogin.
-        ]
-
-        pass: aPass [
-            passHash := (MD5 new: aPass) hexDigest.
-        ]
-
-        passHash: aString [
-            passHash := aString
-        ]
-
-        hash [
-            <category: 'equality'>
-            ^login hash bitXor: passHash hash
-        ]
-
-        = aCreds [
-            ^(self hash = aCreds hash)
         ]
     ]
 
@@ -276,7 +246,7 @@ Namespace current: Shampoo [
 
         ShampooServer class >> startOn: aPort login: aLogin pass: aPass [
             <category: 'instance creation'>
-            ^self startOn: aPort creds: (UserCreds login: aLogin pass: aPass)
+            ^self startOn: aPort creds: (AuthInfo login: aLogin pass: aPass)
         ]
 
         ShampooServer class >> startOn: aPort creds: aCreds [
