@@ -18,9 +18,9 @@ Namespace current: Shampoo [
         ]
 
         asXML [
-            ^(XML.Element tag: 'response')
-                addAttribute: (XML.Attribute name: 'id' value: id asString);
-                addAttribute: (XML.Attribute name: 'type' value: self type);
+            ^(ShampooXML.ShNode tagname: 'response')
+                addAttribute: 'id' value: id asString;
+                addAttribute: 'type' value: self type;
                 yourself
         ]
     ]
@@ -32,7 +32,7 @@ Namespace current: Shampoo [
 
         asXML [
             ^(super asXML)
-                addNode: (XML.Text text: Smalltalk version);
+                addNode: (ShampooXML.ShText text: Smalltalk version);
                 yourself
         ]
     ]
@@ -68,7 +68,7 @@ Namespace current: Shampoo [
 
         asXML [
             ^(super asXML)
-                addAttribute: (XML.Attribute name: 'status' value: self statusString);
+                addAttribute: 'status' value: self statusString;
                 yourself
         ]
     ]
@@ -99,8 +99,8 @@ Namespace current: Shampoo [
 
             self items keysAndValuesDo:
                 [:key :values | values do: [:each |
-                root addNode: ((XML.Element tag: key asString)
-                                   addNode: (XML.Text text: each);
+                root addNode: ((ShampooXML.ShNode tagname: key asString)
+                                   addNode: (ShampooXML.ShText text: each);
                                    yourself)]].
 
             ^root
@@ -158,12 +158,11 @@ Namespace current: Shampoo [
         asXML [
             | r |
             r := super asXML.
-            r addAttribute: (XML.Attribute name: 'class' value: class).
+            r addAttribute: 'class' value: class.
             attrs ifNotNil:
               [:dict |
-              dict keysAndValuesDo:
-                  [:key :value |
-                  r addAttribute: (XML.Attribute name: key value: value)]].
+              dict keysAndValuesDo: 
+                  [:key :value | r addAttribute: key value: value]].
             ^r
         ]
     ]
@@ -227,8 +226,8 @@ Namespace current: Shampoo [
 
         asXML [
             ^(super asXML)
-                addAttribute: (XML.Attribute name: 'method' value: methodName);
-                addNode: (XML.Text text: methodSource);
+                addAttribute: 'method' value: methodName;
+                addNode: (ShampooXML.ShText text: methodSource);
                 yourself
         ]
     ]
@@ -256,7 +255,7 @@ Namespace current: Shampoo [
 
         asXML [
             ^(super asXML)
-                addNode: (XML.Text text: value printString);
+                addNode: (ShampooXML.ShText text: value printString);
                 yourself
         ]
     ]
@@ -280,7 +279,7 @@ Namespace current: Shampoo [
 
         asXML [
             ^(super asXML)
-                addNode: (XML.Text text: text);
+                addNode: (ShampooXML.ShText text: text);
                 yourself
         ]
     ]
@@ -306,7 +305,7 @@ Namespace current: Shampoo [
 
         asXML [
             ^(super asXML)
-                addNode: (XML.Text text: number printString);
+                addNode: (ShampooXML.ShText text: number printString);
                 yourself
         ]
     ]

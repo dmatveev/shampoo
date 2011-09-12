@@ -8,12 +8,14 @@
 
   <namespace>Shampoo</namespace>
 
+  <filein>xml.st</filein>
   <filein>hacks.st</filein>
   <filein>auth.st</filein>
   <filein>requests.st</filein>
   <filein>responses.st</filein>
   <filein>server.st</filein>
 
+  <file>xml.st</file>
   <file>hacks.st</file>
   <file>auth.st</file>
   <file>requests.st</file>

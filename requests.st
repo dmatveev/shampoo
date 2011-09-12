@@ -223,7 +223,7 @@ Namespace current: Shampoo [
             side := (attrs at: 'side' ifAbsent: ['instance']) asSymbol.
 
             fetchBlock := [:type | (anXML elementsNamed: type) collect:
-                                   [:each | each characterData]].
+                                   [:each | each text]].
 
             "This data is common for bost `instance` and `class` sides"
             className := attrs at: 'class'.
@@ -286,7 +286,7 @@ Namespace current: Shampoo [
             className := attrs at: 'class'.
             spaceName := attrs at: 'namespace'.
             side := (attrs at: 'side') asSymbol.
-            source := anXML characterData
+            source := anXML text
         ]
 
         execute [
@@ -306,7 +306,7 @@ Namespace current: Shampoo [
         | code |
 
         init: anXML [
-            code := '[', anXML characterData, '] value'
+            code := '[', anXML text, '] value'
         ]
 
         execute [

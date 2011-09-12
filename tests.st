@@ -78,11 +78,7 @@ Namespace current: Shampoo [
         ]
 
         requestFrom: aString [
-            | xml |
-            xml := XML.XMLParser
-                        processDocumentString: aString
-                        beforeScanDo: [:p | p validate: false].
-            ^Request from: xml root
+            ^Request from: (ShampooXML.ShNode from: aString)
         ]
     ]
 

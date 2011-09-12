@@ -14,11 +14,3 @@ Collection extend [
         ^(self collect: [:each | each asString]) asArray
     ]
 ]
-
-XML.Element extend [
-    attrMap [
-        <category: '*shampoo-accessors'>
-        ^Dictionary from:
-            (self attributes collect: [ :each | each key type -> each value ])
-    ]
-]

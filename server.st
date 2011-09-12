@@ -53,8 +53,7 @@ Namespace current: Shampoo [
 
         parsed [
             <category: 'private'>
-            ^XML.XMLParser processDocumentString: stanza contents
-                           beforeScanDo: [:p | p validate: false]
+            ^ShampooXML.ShNode from: stanza contents
         ]
 
         fetch [
@@ -62,7 +61,7 @@ Namespace current: Shampoo [
             [sock isPeerAlive] whileTrue:
                 [stanza nextPutAll: (sock upTo: $>); nextPut: $>.
                  [^self parsed]
-                    on: XML.MalformedSignal
+                    on: ShampooXML.Malformed
                     do: [:e | nil]].
             sock isPeerAlive ifFalse: [ClientDisconnected new signal]
         ]
@@ -171,7 +170,7 @@ Namespace current: Shampoo [
 
         process: anXMLRequest [
             | r |
-            r := Request from: anXMLRequest root.
+            r := Request from: anXMLRequest.
             [(self state process: r) asXML printOn: sock.
              sock flush] on: FatalError do: [:e | self drop]
         ]
