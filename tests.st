@@ -1,6 +1,7 @@
 Namespace current: Smalltalk [
     Namespace current: ShampooSamples [
         Object subclass: SampleClassA [
+            <category: 'Shampoo-Tests'>
             | a b c |
 
             one := 1.
@@ -13,6 +14,7 @@ Namespace current: Smalltalk [
         ]
 
         Object subclass: SampleClassB [
+            <category: 'Shampoo-Tests'>
             doSomething [
                 <category: 'sample-category'>
                 ^42
@@ -39,39 +41,48 @@ Namespace current: Smalltalk [
         ]
 
         Object subclass: SampleClassD [
+            <category: 'Shampoo-Tests'>
         ]
 
         nil subclass: SampleClassE [
+            <category: 'Shampoo-Tests'>
         ]
 
         Object subclass: SampleClassSide [
+            <category: 'Shampoo-Tests'>
         ]
     ]
 ]
 
 Namespace current: Shampoo [
-    "Warning! This is a great kludge. I do not need these methods in the
-     original implementation but do need for tests"
+    "We do not need these methods in the original implementation but do need it
+for tests"
 
     Response extend [
+        <category: '*Shampoo-Tests'>
         id [^id]
     ]
 
     OperationalResponse extend [
+        <category: '*Shampoo-Tests'>
         success [^success]
     ]
 
     ClassInfoResponse extend [
+        <category: '*Shampoo-Tests'>
         className [^class]
         attrs [^attrs]
     ]
 
     MethodResponse extend [
+        <category: '*Shampoo-Tests'>
         methodName [^methodName]
         methodSource [^methodSource]
     ]
 
     TestCase subclass: ShampooTestCase [
+        <category: 'Shampoo-Tests'>
+
         defaultLogPolicyClass [
             <category: 'logging'>
             ^TestVerboseLog
@@ -83,6 +94,8 @@ Namespace current: Shampoo [
     ]
 
     ShampooTestCase subclass: LoginTest [
+        <category: 'Shampoo-Tests'>
+
         | login server info |
 
         setUp [
@@ -103,6 +116,8 @@ Namespace current: Shampoo [
     ]
 
     ShampooTestCase subclass: NamespacesTest [
+        <category: 'Shampoo-Tests'>
+
         | namespaces r items |
 
         setUp [
@@ -131,6 +146,8 @@ Namespace current: Shampoo [
     ]
 
     ShampooTestCase subclass: ClassesTest [
+        <category: 'Shampoo-Tests'>
+
         | classes |
 
         setUp [
@@ -151,6 +168,8 @@ Namespace current: Shampoo [
     ]
 
     ShampooTestCase subclass: ClassTest [
+        <category: 'Shampoo-Tests'>
+
         | class nilSubclass classSide r nilr classr |
 
         setUp [
@@ -217,6 +236,8 @@ Namespace current: Shampoo [
     ]
 
     ShampooTestCase subclass: CatsTest [
+        <category: 'Shampoo-Tests'>
+
         | cats emptyCats |
 
         setUp [
@@ -251,6 +272,8 @@ Namespace current: Shampoo [
     ]
 
     ShampooTestCase subclass: MethodsTest [
+        <category: 'Shampoo-Tests'>
+
         | methods asterisk |
 
         setUp [
@@ -290,6 +313,8 @@ Namespace current: Shampoo [
     ]
 
     ShampooTestCase subclass: MethodTest [
+        <category: 'Shampoo-Tests'>
+
         | method |
 
         setUp [
@@ -310,6 +335,8 @@ Namespace current: Shampoo [
     ]
 
     ShampooTestCase subclass: CompileClassTest [
+        <category: 'Shampoo-Tests'>
+
         | compileClass r compiledClass |
 
         setUp [
@@ -354,6 +381,8 @@ Namespace current: Shampoo [
     ]
 
     ShampooTestCase subclass: CompileClassSideTest [
+        <category: 'Shampoo-Tests'>
+
         | classSide rside classSideResult |
 
         setUp [
@@ -380,7 +409,9 @@ Namespace current: Shampoo [
     ]
 
     ShampooTestCase subclass: CompileMethodTest [
-         | compileMethod |
+        <category: 'Shampoo-Tests'>
+
+        | compileMethod |
 
         setUp [
             compileMethod := self requestFrom: self compileMethodSample
@@ -403,6 +434,8 @@ Namespace current: Shampoo [
     ]
 
     ShampooTestCase subclass: DoItTest [
+        <category: 'Shampoo-Tests'>
+
         | doit locals |
 
         setUp [
@@ -442,6 +475,8 @@ Namespace current: Shampoo [
     ]
 
     ShampooTestCase subclass: PrintItTest [
+        <category: 'Shampoo-Tests'>
+
         | printit |
 
         setUp [

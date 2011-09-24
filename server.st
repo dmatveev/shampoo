@@ -1,34 +1,50 @@
 Namespace current: Shampoo [
 
     Exception subclass: ClientDisconnected [
+        <category: 'Shampoo-Server'>
+        <comment: 'I am just an exception. My instances point out that a client
+has disconnected from the server.'>
     ]
 
     Exception subclass: FatalError [
+        <category: 'Shampoo-Server'>
+        <comment: 'I am just an exception. My instances represent a fatal,
+unrecoverable error.'>
     ]
 
     Object subclass: ShampooTranscript [
+        <category: 'Shampoo-Server'>
+        <comment: 'I am a network-oriented version of the standard GNU Smalltalk
+Transcript. I send every text being printed to a client, but also mirror the
+text to the standard output, as the original Transcript does'>
+
         servers := Set new.
         serversMutex := Semaphore forMutualExclusion.
         oldAssoc := nil.
 
         ShampooTranscript class >> message: aString [
+            <category: 'transcript'>
             self fallback: aString.
             serversMutex critical: [servers do: [:each | each echo: aString]]
         ]
 
         ShampooTranscript class >> fallback: aString [
+            <category: 'transcript'>
             oldAssoc ifNotNil: [oldAssoc key perform: oldAssoc value with: aString].
         ]
 
         ShampooTranscript class >> add: aServer [
+            <category: 'setup'>
             serversMutex critical: [servers add: aServer]
         ]
             
         ShampooTranscript class >> remove: aServer [
+            <category: 'setup'>
             serversMutex critical: [servers remove: aServer]
         ]
     
         ShampooTranscript class >> install [
+            <category: 'installation'>
             | message |
             message := Transcript message.
             (message key = ShampooTranscript and: [message value = #message:])
@@ -38,6 +54,11 @@ Namespace current: Shampoo [
     ]
 
     Object subclass: RequestFetcher [
+        <category: 'Shampoo-Server'>
+        <comment: 'My instances incapsulate a fetching process. Long XML messages
+often come in parts, so my intention is to fetch a single message from a socket
+until a parser will able to parse it.'>
+
         | sock stanza |
 
         RequestFetcher class >> fetch: aSocket [
@@ -68,6 +89,10 @@ Namespace current: Shampoo [
     ]
 
     Object subclass: ConnectionState [
+        <category: 'Shampoo-Server'>
+        <comment: 'My subclasses represent various states of a user session on
+the server. Yes, the server aims to look like as a finite state machine.'>
+
         | connection |
 
         ConnectionState class >> of: aConnection [
@@ -99,14 +124,20 @@ Namespace current: Shampoo [
     ]
 
     ConnectionState subclass: NotAuthorizedState [
+        <category: 'Shampoo-Server'>
+        <comment: 'My instances represent a non-authorized state of a user
+session. When entered, I send a magic string to a client. If the client will
+prove his identity, I will switch the session to the AutiorizedState.'>
         | magic |
 
         register [
+            <category: 'other'>
             "Send a magic number to a client"
             connection send: (MagicResponse number: self magic)
         ]
 
         process: aRequest [
+            <category: 'fsm'>
             "Anti-If campaign probably hates me."
             aRequest class == LoginRequest
                 ifTrue: [^self checkLogin: aRequest]
@@ -114,6 +145,7 @@ Namespace current: Shampoo [
         ]
 
         checkLogin: aRequest [
+            <category: 'private'>
             "Really hates."
             (connection server creds with: self magic) = aRequest creds
                 ifTrue: [self switchTo: AuthorizedState.
@@ -122,6 +154,8 @@ Namespace current: Shampoo [
         ]
 
         fatal [
+            <category: 'private'>
+            "TODO: Drop this method?"
             FatalError new signal
         ]
 
@@ -132,16 +166,27 @@ Namespace current: Shampoo [
     ]
 
     ConnectionState subclass: AuthorizedState [
+        <category: 'Shampoo-Server'>
+        <comment: 'My instances represent an authorized state of a user session.
+This state is also can be called "active". The most of Shampoo requests are
+processed in this state.'>
+
         process: aRequest [
+            <category: 'fsm'>
             ^aRequest execute
         ]
 
         echo: aString [
+            <category: 'fsm'>
             connection send: (EchoResponse id: -1 text: aString)
         ]
     ]
 
     Object subclass: ClientConnection [
+        <category: 'Shampoo-Server'>
+        <comment: 'My instances represent a client connection. A client connection
+is actually a finite state machine, see ConnectionState class and its subclasses'>
+
         | sock server disconnectedHandler state |
 
         ClientConnection class >> on: aSocket onDisconnect: aBlock parent: aServer [
@@ -158,6 +203,7 @@ Namespace current: Shampoo [
         ]
 
         go [
+            <category: 'loop'>
             [sock isPeerAlive] whileTrue:
                 [[self process: (RequestFetcher fetch: sock)]
                 on: ClientDisconnected do: [:e | self signalDisconnected]]
@@ -169,6 +215,7 @@ Namespace current: Shampoo [
         ]
 
         process: anXMLRequest [
+            <category: 'fsm'>
             | r |
             r := Request from: anXMLRequest.
             [(self state process: r) asXML printOn: sock.
@@ -186,15 +233,18 @@ Namespace current: Shampoo [
         ]
 
         echo: aString [
+            <category: 'fsm'>
             self state echo: aString
         ]
 
         send: aPacket [
+            <category: 'networking'>
             aPacket asXML printOn: sock.
             sock flush
         ]
 
         drop [
+            <category: 'networking'>
             sock close.
             self signalDisconnected
         ]
@@ -206,6 +256,10 @@ Namespace current: Shampoo [
     ]
 
     Object subclass: ShampooServer [
+        <category: 'Shampoo-Server'>
+        <comment: 'I am the heart of the Shampoo system. My instances manage
+connections and... hmm, looks like thats all.'>
+
         | server clients clientsMutex creds |
 
         clients [
@@ -225,6 +279,8 @@ Namespace current: Shampoo [
         ]
 
         handleDisconnected: aClient [
+            <category: 'delegation'>
+            "This method is delegated to a client session in a block"
             clientsMutex critical: [self clients remove: aClient]
         ]
 
@@ -240,6 +296,7 @@ Namespace current: Shampoo [
         ]
 
         echo: aString [
+            <category: 'transcript'>
             clientsMutex critical: [self clients do: [:each | each echo: aString]]
         ]
 
@@ -257,7 +314,8 @@ Namespace current: Shampoo [
         ]
 
         creds [
-            ^creds
+            <category: 'accessors'>
+            ^creds shallowCopy
         ]
     ]
 ]
