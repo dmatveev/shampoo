@@ -13,11 +13,12 @@
 | 01 Jun 2011 | Dmitry Matveev | Added "side" attribute to "CompileClass" request + details          |
 | 09 Jun 2011 | Dmitry Matveev | Authorization & server info requests/responses                      |
 | 12 Jun 2011 | Dmitry Matveev | Added '*' support for Method request                                |
+| 24 Sep 2011 | Dmitry Matveev | Added a section about authentication mechanism                      |
 
 * Overview
 
-Shampoo-XML is a protocol for remote Smalltalk image control. It provides a set
-of commands that allow to...
+Shampoo-XML is a protocol for remote Smalltalk image control & development. It
+provides a set of commands that allow to...
   - get a list of namespaces;
   - get a list of classes in namespace;
   - get a list of methods in class (instance side or class side);
@@ -25,11 +26,33 @@ of commands that allow to...
     variable names, etc);
   - remove a class;
   - get a source string of a concrete method in a concrete class;
-  - compile a supplied source string for a concrete method in a concrete class.
+  - compile a supplied source string for a concrete method in a concrete class;
+  - evaluate an expression and to get the result.
 
-Shampo is functioning in a request/response server. Client sends a request to
-the server and server replies with a response. Server will not send anything
-to the client without an appropriate request.
+Shampoo is functioning in a request/response scheme. Client sends a request to
+the server and server replies with a response. There are some messages that can
+be sent by a server outside of this scheme, i.e. without an appropriate request.
+
+
+* Authentication
+
+Authentication is mandatory. Shampoo does not allow to request info about/modify
+the image without an authentication.
+
+Currently Shampoo uses the classical Pre-Shared Key (PSK) scheme. It means that
+an authentication key (a login/password pair) is pre-configured on the server side.
+
+When a client connects to the Shampoo server, the server first sends an *Magic*
+message to the client. This message contains a random session-local magic string
+(usually a number). Client has to:
+1. Calculate an MD5 checksum of the user's password;
+2. Concatenate the magic string with the checksum;
+3. Calculate an MD5 checksum of this concatenation;
+4. Send it back to the server as well with the login in the *Login* message.
+
+Why do we have step 1? Because server does not store the password in the plain
+text form, it stores only an MD5 checksum too.
+
 
 * Basics
 
@@ -37,17 +60,17 @@ to the client without an appropriate request.
 
 #+BEGIN_EXAMPLE
   <request
-    id=...          (1)
-    type=...        (2)
+    id="..."          (1)
+    type="..."        (2)
     ...>            
-      <...>         (3)
+      <...>           (3)
   </request>
 #+END_EXAMPLE
 
   OR
 
 #+BEGIN_EXAMPLE
-  <request id=... type=... ... />
+  <request id="..." type="..." ... />
 #+END_EXAMPLE
 
 ID (1) is a numeric value showing the number of the request in the sequence. When
@@ -61,26 +84,27 @@ will be included into the body of a request (3).
 
 #+BEGIN_EXAMPLE
   <response
-    id=...          (1)
-    type=...        (2)
+    id="..."          (1)
+    type="..."        (2)
     ...>
-      <...>         (3)
+      <...>           (3)
   </response>
 #+END_EXAMPLE
 
 OR
 
 #+BEGIN_EXAMPLE
-  <response id=... type=... ... />
+  <response id="..." type="..." ... />
 #+END_EXAMPLE
 
 The response structure is similar to a request structure. Response ID (1) must
 always match the appropriate request ID, and the response body (3) is determined
 by response type (2).
+
   
 * Requests
 
-** Login
+10** Login
 
 *** Description
 Provide credentials to server for authorization.
@@ -89,12 +113,11 @@ Provide credentials to server for authorization.
 
 #+BEGIN_EXAMPLE
   <request id="25" type="Login">
-    <creds login="dmitry" pass="1a1dc91c907325c69271ddf0c944bc72" />
+    <creds login="dmitry" magic="1a1dc91c907325c69271ddf0c944bc72" />
   </request>
 #+END_EXAMPLE
 
-Pass field is an MD5 hash of an actual password. This scheme is quite unsecure and
-will be improved later.
+Magic field is described in the *Authentication* section.
 
 *** Response
 In the case of successful authorization server will reply with *Info* response.
@@ -223,7 +246,7 @@ See *MethodSource*
 ** CompileClass
 
 *** Description
-Compile a new class. Or recompile it, if a class is already exist.
+Compile a new class. Or recompile it, if the class is already exist.
 
 *** Syntax
 
@@ -282,6 +305,38 @@ See *OperationalResponse*
 ** TODO RemoveClass
 
 ** TODO RemoveMethod
+
+** DoIt
+
+*** Description
+Ask server to evaluate an expression.
+
+*** Syntax
+
+#+BEGIN_EXAMPLE
+  <request id="80" type="DoIt">
+    Transcript show: 'Hello world'
+  </request>
+#+END_EXAMPLE
+
+*** Response
+See *OperationalResponse*
+
+** PrintIt
+
+*** Description
+Ask server to evaluate an expression and to send the result back to us.
+
+*** Syntax
+
+#+BEGIN_EXAMPLE
+  <request id="80" type="DoIt">
+    Transcript show: 'Hello world'
+  </request>
+#+END_EXAMPLE
+
+*** Response
+See *PrintIt*
 
 * Responses
 
@@ -408,8 +463,40 @@ sending (to &amp; &lt; &gt; etc).
 A string with server information. The information contents is backend-dependent, but
 usually it is an image/system version.
 
+*** Syntax
+
 #+BEGIN_EXAMPLE
   <response id="25" type="Info">
     GNU Smalltalk version 3.2.3-4f40165
+  </response>
+#+END_EXAMPLE
+
+** Echo
+
+*** Description
+
+This message contains an output that is being printed on the Transcript. These
+notifications are sent to all the connected clients, not only to the one that
+has initiated the printing.
+
+*** Syntax
+
+#+BEGIN_EXAMPLE
+  <response id="-1" type="Echo">
+    Some text here
+  </response>
+#+END_EXAMPLE
+
+** PrintIt
+
+*** Description
+
+This message contains an output of an expression evaluation.
+
+*** Syntax
+
+#+BEGIN_EXAMPLE
+  <response id="44" type="PrintIt">
+    Some text here
   </response>
 #+END_EXAMPLE
