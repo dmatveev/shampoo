@@ -59,25 +59,41 @@ Namespace current: Shampoo [
 for tests"
 
     Response extend [
-        <category: '*Shampoo-Tests'>
-        id [^id]
+        id [
+            <category: '*Shampoo-Tests'>
+            ^id
+        ]
     ]
 
     OperationalResponse extend [
-        <category: '*Shampoo-Tests'>
-        success [^success]
+        success [
+            <category: '*Shampoo-Tests'>
+            ^success
+        ]
     ]
 
     ClassInfoResponse extend [
-        <category: '*Shampoo-Tests'>
-        className [^class]
-        attrs [^attrs]
+        className [
+            <category: '*Shampoo-Tests'>
+            ^class
+        ]
+
+        attrs [
+            <category: '*Shampoo-Tests'>
+            ^attrs
+        ]
     ]
 
     MethodResponse extend [
-        <category: '*Shampoo-Tests'>
-        methodName [^methodName]
-        methodSource [^methodSource]
+        methodName [
+            <category: '*Shampoo-Tests'>
+            ^methodName
+        ]
+        
+        methodSource [
+            <category: '*Shampoo-Tests'>
+            ^methodSource
+        ]
     ]
 
     TestCase subclass: ShampooTestCase [

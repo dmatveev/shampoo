@@ -272,7 +272,7 @@ connections and... hmm, looks like thats all.'>
             | client |
             client := ClientConnection
                 on: server accept
-                onDisconnect: [:client | self handleDisconnected: client]
+                onDisconnect: [:cl | self handleDisconnected: cl]
                 parent: self.
             clientsMutex critical: [self clients add: client].
             ^client

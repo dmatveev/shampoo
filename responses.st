@@ -383,7 +383,7 @@ appropriate request.'>
 
     Response subclass: MagicResponse [
         <category: 'Shampoo-Responses'>
-        <category: 'I am not actually a response, I am like a request that
+        <comment: 'I am not actually a response, I am like a request that
 goes from the server to a client. My instances hold a magic number used by
 a client for password encryption during the authentication.'>
 

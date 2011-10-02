@@ -374,6 +374,7 @@ method in the concrete class at the concrete namespace.'>
     ]
 
     Exception subclass: EvalFailure [
+        <category: 'Shampoo-Requests'>
     ]
 
     Request subclass: EvalRequest [
@@ -418,7 +419,6 @@ client.'>
         <category: 'Shampoo-Requests'>
         <comment: 'My instances represent PrintIt requests. A PrinIt request
 evaluates an expession and returns its result in a printed form to the client.'>
-        | code |
 
         PrintItRequest class >> is: aString [
             <category: 'identification'>
