@@ -161,7 +161,7 @@ prove his identity, I will switch the session to the AutiorizedState.'>
 
         magic [
             <category: 'private'>
-            ^magic ifNil: [magic := Random between: 0 and: 16rFFFFFFFF]
+            ^magic ifNil: [magic := Random between: 0 and: 16rFFFF]
         ]
     ]
 
