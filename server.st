@@ -199,7 +199,8 @@ is actually a finite state machine, see ConnectionState class and its subclasses
             sock := aSocket.
             server := aServer.
             disconnectedHandler := aBlock.
-            self state register
+            state := NotAuthorizedState of: self.
+            state register.
         ]
 
         go [
@@ -218,8 +219,8 @@ is actually a finite state machine, see ConnectionState class and its subclasses
             <category: 'fsm'>
             | r |
             r := Request from: anXMLRequest.
-            [(self state process: r) asXML printOn: sock.
-             sock flush] on: FatalError do: [:e | self drop]
+            [self send: (self state process: r)]
+                 on: FatalError do: [:e | self drop]
         ]
 
         state: aClientConnectionState [
@@ -229,7 +230,7 @@ is actually a finite state machine, see ConnectionState class and its subclasses
 
         state [
             <category: 'fsm'>
-            ^state ifNil: [state := NotAuthorizedState of: self]
+            ^state
         ]
 
         echo: aString [
@@ -239,7 +240,15 @@ is actually a finite state machine, see ConnectionState class and its subclasses
 
         send: aPacket [
             <category: 'networking'>
-            aPacket asXML printOn: sock.
+            | stream |
+            stream := WriteStream on: String new.
+            aPacket asXML printOn: stream.
+            sock
+                nextPutAll: 'Content-Length: ',
+                            stream contents size printString;
+                crlf;
+                crlf;
+                nextPutAll: stream contents; crlf.
             sock flush
         ]
 

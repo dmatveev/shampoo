@@ -14,3 +14,13 @@ Collection extend [
         ^(self collect: [:each | each asString]) asArray
     ]
 ]
+
+Namespace current: Sockets [
+StreamSocket extend [
+    crlf [
+        <category: '*shampoo-hacks'>
+        self
+            nextPut: Character cr;
+            nextPut: Character lf
+    ]
+]]
