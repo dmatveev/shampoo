@@ -35,6 +35,7 @@
     <sunit>Shampoo.CompileMethodTest</sunit>
     <sunit>Shampoo.DoItTest</sunit>
     <sunit>Shampoo.PrintItTest</sunit>
+    <sunit>Shampoo.OperationalResponseTest</sunit>
     <filein>tests.st</filein>
   </test>
 </package>

@@ -509,4 +509,23 @@ for tests"
             ^'<request id="80" type="PrintIt">2 + 2 * 2</request>'
         ]
     ]
+
+    ShampooTestCase subclass: OperationalResponseTest [
+        <category: 'Shampoo-Tests'>
+
+        | succ fail |
+
+        setUp [
+            succ := OperationalResponse success: 1.
+            fail := OperationalResponse failure: 1.
+        ]
+
+        testSuccess [
+            self should: [succ statusString = 'success']
+        ]
+
+        testFailure [
+            self should: [fail statusString = 'failure']
+        ]
+    ]
 ]

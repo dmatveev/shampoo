@@ -68,7 +68,7 @@ the server can send me any time, even without an appropriate request'>
         OperationalResponse class >> failure: anInteger [
             <category: 'instance creation'>
             ^(OperationalResponse id: anInteger)
-                success: true;
+                success: false;
                 yourself
         ]
 
