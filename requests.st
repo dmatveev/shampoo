@@ -86,7 +86,7 @@ in the image.'>
             <category: 'execution'>
             | names |
             names := ((Namespace allInstances select: [:each | each environment = Smalltalk])
-                        collect: [:each | each name asString]) asSet asOrderedCollection.
+                        collect: [:each | each name asString]) asSet asSortedCollection.
             ^NamespacesResponse id: id names: (#('Smalltalk'), names)
         ]
     ]
@@ -326,13 +326,13 @@ in a concrete class from a concrete namespace.'>
                             classVariableNames: classvars elementsString
                             poolDictionaries: '' " poolvars elementsString "
                             category: ''.
-                         ] on: Exception do: [:e | e inspect. failed := true].
+                         ] on: Error do: [:e | e inspect. failed := true].
 
                          Namespace current: currentSpace]
 
                 ifFalse: [class := targetSpace at: className asSymbol ifAbsent: [nil].
                           [class class instanceVariableNames: instvars elementsString]
-                              on: Exception do: [:e | e inspect. failed := true]].
+                              on: Error do: [:e | e inspect. failed := true]].
 
             failed
                 ifTrue: [^OperationalResponse failure: id]
@@ -364,12 +364,17 @@ method in the concrete class at the concrete namespace.'>
 
         execute [
             <category: 'execution'>
-            | class failed |
+            | class |
             class := (Smalltalk at: spaceName asSymbol) at: className asSymbol.
             (side = #class) ifTrue: [class := class class].
 
-            class compile: source ifError: [^OperationalResponse failure: id].
+            [class compile: source ifError: [^self fail]] ifError: [^self fail].
             ^OperationalResponse success: id
+        ]
+
+        fail [
+            <category: 'execution'>
+            ^OperationalResponse failure: id
         ]
     ]
 
@@ -393,7 +398,7 @@ variables in "||" available. See my subclasses for more info.'>
 
         execute [
             <category: 'execution'>
-            ^Behavior evaluate: code ifError: [EvalFailure new signal].
+            ^[Behavior evaluate: code] ifError: [EvalFailure new signal].
         ]
     ]
 
