@@ -53,41 +53,6 @@ text to the standard output, as the original Transcript does'>
         ]
     ]
 
-    Object subclass: RequestFetcher [
-        <category: 'Shampoo-Server'>
-        <comment: 'My instances incapsulate a fetching process. Long XML messages
-often come in parts, so my intention is to fetch a single message from a socket
-until a parser will able to parse it.'>
-
-        | sock stanza |
-
-        RequestFetcher class >> fetch: aSocket [
-            <category: 'instance creation'>
-            ^self new init: aSocket; fetch
-        ]
-    
-        init: aSocket [
-            <category: 'private'>
-            sock := aSocket.
-            stanza := String new writeStream
-        ]
-
-        parsed [
-            <category: 'private'>
-            ^ShampooXML.ShNode from: stanza contents
-        ]
-
-        fetch [
-            <category: 'private'>
-            [sock isPeerAlive] whileTrue:
-                [stanza nextPutAll: (sock upTo: $>); nextPut: $>.
-                 [^self parsed]
-                    on: ShampooXML.Malformed
-                    do: [:e | nil]].
-            sock isPeerAlive ifFalse: [ClientDisconnected new signal]
-        ]
-    ]
-
     Object subclass: ConnectionState [
         <category: 'Shampoo-Server'>
         <comment: 'My subclasses represent various states of a user session on
@@ -187,7 +152,7 @@ processed in this state.'>
         <comment: 'My instances represent a client connection. A client connection
 is actually a finite state machine, see ConnectionState class and its subclasses'>
 
-        | sock server disconnectedHandler state |
+        | sock server disconnectedHandler state parser |
 
         ClientConnection class >> on: aSocket onDisconnect: aBlock parent: aServer [
             <category: 'instance creation'>
@@ -201,24 +166,35 @@ is actually a finite state machine, see ConnectionState class and its subclasses
             disconnectedHandler := aBlock.
             state := NotAuthorizedState of: self.
             state register.
+            parser := MessageParser new.
         ]
 
         go [
             <category: 'loop'>
             [sock isPeerAlive] whileTrue:
-                [[self process: (RequestFetcher fetch: sock)]
-                on: ClientDisconnected do: [:e | self signalDisconnected]]
+                [[self fetchMessages do: [:m | self process: m]]
+                  on: ClientDisconnected
+                  do: [:e | self signalDisconnected]]
+        ]
+
+        fetchMessages [
+            <category: 'private'>
+            sock ensureReadable.
+            ^parser process: (sock next: sock availableBytes)
         ]
 
         signalDisconnected [
             <category: 'private'>
-            disconnectedHandler ifNotNil: [:handler | handler value: self]
+            disconnectedHandler ifNotNil:
+            [:handler | handler value: self]
         ]
 
         process: anXMLRequest [
             <category: 'fsm'>
-            | r |
-            r := Request from: anXMLRequest.
+            | r xml |
+            [xml := ShampooXML.ShNode from: anXMLRequest
+            ] ifError: [^nil].
+            r := Request from: xml.
             [self send: (self state process: r)]
                  on: FatalError do: [:e | self drop]
         ]

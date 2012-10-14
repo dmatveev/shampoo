@@ -528,4 +528,65 @@ for tests"
             self should: [fail statusString = 'failure']
         ]
     ]
+
+    ShampooTestCase subclass: MessageParserTest [
+        <category: 'Shampoo-Tests'>
+        
+        | justParser overParser underParser brokenParser |
+        
+        setUp [
+            justParser := MessageParser new.
+            overParser := MessageParser new.
+            underParser := MessageParser new.
+            brokenParser := MessageParser new.
+        ]
+
+        happy [
+            ^'Content-Length: 2', String crlf,
+                String crlf,
+                ':)'
+        ]
+
+        sad [
+            ^'Content-Length: 2', String crlf,
+                String crlf,
+                ':('
+        ]
+
+        testSimple [
+            | msg r |
+            msg := self happy.
+            r := justParser process: msg.
+            self should: [r first = ':)']
+        ]
+
+        testOver [
+            | msg r |
+            msg := self happy, self sad.
+            r := overParser process: msg.
+            self
+                should: [r first = ':)'];
+                should: [r second = ':(']
+        ]
+
+        testUnder [
+            | msg r |
+            msg := self happy, (self sad copyFrom: 1 to: 7).
+            r := underParser process: msg.
+            self
+                should: [r first = ':)'];
+                should: [r size = 1]
+        ]
+
+        testBroken [
+            | msg part1 part2 r |
+            msg := self sad.
+            part1 := msg copyFrom: 1 to: 7.
+            part2 := msg copyFrom: 8.
+            r := brokenParser process: part1.
+            self should: [r isEmpty].
+            r := brokenParser process: part2.
+            self should: [r first = ':(']
+        ]
+    ]
 ]

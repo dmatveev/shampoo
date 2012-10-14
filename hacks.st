@@ -15,12 +15,20 @@ Collection extend [
     ]
 ]
 
+String class extend [
+    crlf [
+        <category: '*shampoo-hacks'>
+        ^String new writeStream
+            nextPut: Character cr;
+            nextPut: Character lf;
+            contents
+    ]
+]
+
 Namespace current: Sockets [
 StreamSocket extend [
     crlf [
         <category: '*shampoo-hacks'>
-        self
-            nextPut: Character cr;
-            nextPut: Character lf
+        self nextPutAll: String crlf
     ]
 ]]

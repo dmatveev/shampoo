@@ -14,6 +14,7 @@
   <filein>requests.st</filein>
   <filein>responses.st</filein>
   <filein>server.st</filein>
+  <filein>parser.st</filein>
 
   <file>xml.st</file>
   <file>hacks.st</file>
@@ -21,6 +22,7 @@
   <file>requests.st</file>
   <file>responses.st</file>
   <file>server.st</file>
+  <file>parser.st</file>
 
   <test>
     <sunit>Shampoo.LoginTest</sunit>
@@ -36,6 +38,7 @@
     <sunit>Shampoo.DoItTest</sunit>
     <sunit>Shampoo.PrintItTest</sunit>
     <sunit>Shampoo.OperationalResponseTest</sunit>
+    <sunit>Shampoo.MessageParserTest</sunit>
     <filein>tests.st</filein>
   </test>
 </package>
