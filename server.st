@@ -37,12 +37,13 @@ text to the standard output, as the original Transcript does'>
             <category: 'setup'>
             serversMutex critical: [servers add: aServer]
         ]
-            
+
         ShampooTranscript class >> remove: aServer [
             <category: 'setup'>
-            serversMutex critical: [servers remove: aServer]
+            serversMutex critical:
+            [servers remove: aServer ifAbsent: []]
         ]
-    
+
         ShampooTranscript class >> install [
             <category: 'installation'>
             | message |
@@ -179,7 +180,7 @@ is actually a finite state machine, see ConnectionState class and its subclasses
 
         fetchMessages [
             <category: 'private'>
-            sock ensureReadable.
+            [sock ensureReadable] ifError: [ClientDisconnected new signal].
             ^parser process: (sock next: sock availableBytes)
         ]
 
@@ -216,22 +217,28 @@ is actually a finite state machine, see ConnectionState class and its subclasses
 
         send: aPacket [
             <category: 'networking'>
-            | stream |
+            | stream msg |
+            msg := aPacket asXML printString.
             stream := WriteStream on: String new.
-            aPacket asXML printOn: stream.
             sock
-                nextPutAll: 'Content-Length: ',
-                            stream contents size printString;
+                nextPutAll: 'Content-Length: ', msg size printString;
                 crlf;
                 crlf;
-                nextPutAll: stream contents; crlf.
+                nextPutAll: msg;
+                crlf.
             sock flush
+        ]
+
+        close [
+            <category: 'networking'>
+            sock close
         ]
 
         drop [
             <category: 'networking'>
-            sock close.
-            self signalDisconnected
+            self
+                close;
+                signalDisconnected
         ]
 
         server [
@@ -246,6 +253,9 @@ is actually a finite state machine, see ConnectionState class and its subclasses
 connections and... hmm, looks like thats all.'>
 
         | server clients clientsMutex creds |
+
+        servers := Dictionary new.
+        serversMutex := Semaphore forMutualExclusion.
 
         clients [
             <category: 'private'>
@@ -276,13 +286,14 @@ connections and... hmm, looks like thats all.'>
             creds := aCreds.
 
             [server isOpen] whileTrue:
-                [server waitForConnection.
+                [[server waitForConnection] ifError: [^nil].
                  [self acceptedClient go] fork]
         ]
 
         echo: aString [
             <category: 'transcript'>
-            clientsMutex critical: [self clients do: [:each | each echo: aString]]
+            clientsMutex critical:
+            [self clients do: [:each | each echo: aString]]
         ]
 
         ShampooServer class >> startOn: aPort login: aLogin pass: aPass [
@@ -290,17 +301,41 @@ connections and... hmm, looks like thats all.'>
             ^self startOn: aPort creds: (AuthInfo login: aLogin pass: aPass)
         ]
 
+        ShampooServer class >> closeOn: aPort [
+            <category: 'networking'>
+            serversMutex critical:
+                [| srv |
+                 srv := servers at: aPort ifAbsent: [^nil].
+                 servers removeKey: aPort.
+                 srv close]
+        ]
+
         ShampooServer class >> startOn: aPort creds: aCreds [
             <category: 'instance creation'>
-            [| srv |
-             srv := self new.
-             ShampooTranscript add: srv.
-             srv startOn: aPort creds: aCreds] fork
+            serversMutex critical:
+                [(servers includesKey: aPort) ifFalse:
+                    [| srv |
+                     srv := self new.
+                     servers at: aPort put: srv.
+                     ShampooTranscript add: srv.
+                     [srv startOn: aPort creds: aCreds] fork]]
         ]
 
         creds [
             <category: 'accessors'>
             ^creds shallowCopy
+        ]
+   
+        close [
+            <category: 'private'>
+            [server close] ifError: [].
+            clientsMutex critical:
+            [self clients copy do: [:cl | cl close]].
+            "And that's all. Every client connection
+             will be removed from the set in the
+             ShampooServer>>handleDisconnected:."
+
+            ShampooTranscript remove: self
         ]
     ]
 ]
