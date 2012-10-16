@@ -39,6 +39,8 @@
     <sunit>Shampoo.PrintItTest</sunit>
     <sunit>Shampoo.OperationalResponseTest</sunit>
     <sunit>Shampoo.MessageParserTest</sunit>
+    <sunit>Shampoo.ShampooNotAuthStateTest</sunit>
+    <sunit>Shampoo.ShampooConnectionTest</sunit>
     <filein>tests.st</filein>
   </test>
 </package>

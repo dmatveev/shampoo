@@ -6,7 +6,7 @@ Namespace current: Shampoo [
 has disconnected from the server.'>
     ]
 
-    Exception subclass: FatalError [
+    Error subclass: FatalError [
         <category: 'Shampoo-Server'>
         <comment: 'I am just an exception. My instances represent a fatal,
 unrecoverable error.'>
@@ -113,7 +113,7 @@ prove his identity, I will switch the session to the AutiorizedState.'>
         checkLogin: aRequest [
             <category: 'private'>
             "Really hates."
-            (connection server creds with: self magic) = aRequest creds
+            (connection server authenticates: aRequest creds with: self magic)
                 ifTrue: [self switchTo: AuthorizedState.
                          ^ServerInfoResponse id: aRequest id]
                 ifFalse: [self fatal]
@@ -175,7 +175,7 @@ is actually a finite state machine, see ConnectionState class and its subclasses
             [sock isPeerAlive] whileTrue:
                 [[self fetchMessages do: [:m | self process: m]]
                   on: ClientDisconnected
-                  do: [:e | self signalDisconnected]]
+                  do: [:e | ^self signalDisconnected]]
         ]
 
         fetchMessages [
@@ -217,9 +217,8 @@ is actually a finite state machine, see ConnectionState class and its subclasses
 
         send: aPacket [
             <category: 'networking'>
-            | stream msg |
+            | msg |
             msg := aPacket asXML printString.
-            stream := WriteStream on: String new.
             sock
                 nextPutAll: 'Content-Length: ', msg size printString;
                 crlf;
@@ -273,6 +272,11 @@ connections and... hmm, looks like thats all.'>
             ^client
         ]
 
+        authenticates: aCreds with: aMagic [
+            <category: 'authentication'>
+            ^(creds with: aMagic) = aCreds
+        ]
+
         handleDisconnected: aClient [
             <category: 'delegation'>
             "This method is delegated to a client session in a block"
@@ -319,11 +323,6 @@ connections and... hmm, looks like thats all.'>
                      servers at: aPort put: srv.
                      ShampooTranscript add: srv.
                      [srv startOn: aPort creds: aCreds] fork]]
-        ]
-
-        creds [
-            <category: 'accessors'>
-            ^creds shallowCopy
         ]
    
         close [

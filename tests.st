@@ -65,6 +65,13 @@ for tests"
         ]
     ]
 
+    MagicResponse extend [
+        magic [
+            <category: '*Shampoo-Tests'>
+            ^number
+        ]
+    ]
+
     OperationalResponse extend [
         success [
             <category: '*Shampoo-Tests'>
@@ -116,18 +123,27 @@ for tests"
 
         setUp [
             "Magic is 1337"
-            info := AuthInfo login: 'dmitry' pass: 'pass'.
-            login := self requestFrom: self loginSample.
+            info := LoginTest authInfoSample.
+            login := self requestFrom: LoginTest loginSample.
         ]
 
         testCreds [
-            self should: [login creds = (info with: 1337)]
+            self should:
+            [login creds = (info with: LoginTest magicSample)]
         ]
 
-        loginSample [
+        LoginTest class >> loginSample [
             ^'<request id="25" type="Login">
       <creds login="dmitry" magic="0bf2f198be57c763af1c9a6f2359fdc8" />
   </request>'
+        ]
+
+        LoginTest class >> authInfoSample [
+           ^AuthInfo login: 'dmitry' pass: 'pass'.
+        ]
+
+        LoginTest class >> magicSample [
+            ^1337
         ]
     ]
 
@@ -587,6 +603,153 @@ for tests"
             self should: [r isEmpty].
             r := brokenParser process: part2.
             self should: [r first = ':(']
+        ]
+    ]
+
+    Object subclass: ShampooGenericMock [
+        | methods |
+        
+        methods [
+            <category: 'accessors'>
+            ^methods ifNil: [methods := Dictionary new]
+        ]
+
+        doesNotUnderstand: aMessage [
+            <category: 'behavior'>
+            | block |
+            block := methods
+               at: aMessage selector
+               ifAbsent: [^super doesNotUnderstand: aMessage].
+            ^block ifNotNil:
+            [block valueWithArguments: aMessage arguments].
+        ]
+
+        on: aMessageSelector do: aBlock [
+            self methods at: aMessageSelector put: aBlock
+        ]
+
+        ignore: aMessageSelector [
+            self on: aMessageSelector do: nil.
+        ]
+
+        forgetAbout: aMessageSelector [
+            self methods removeKey: aMessageSelector ifAbsent: []
+        ]
+    ]
+
+    ShampooGenericMock subclass: ShampooConnectionMock [
+        | state |
+
+        server [
+            ^self
+        ]
+
+        state [
+            ^state
+        ]
+
+        state: aState [
+            state := aState
+        ]
+    ]
+
+    ShampooTestCase subclass: ShampooNotAuthStateTest [
+        | state connMock |
+        
+        setUp [
+            connMock := ShampooConnectionMock new.
+            state := NotAuthorizedState of: connMock
+        ]
+
+        testCheckLoginSucc [
+            | rq resp |
+            rq := self requestFrom: LoginTest loginSample.
+            connMock 
+                on: #authenticates:with:
+                do: [:creds :magic | true].
+            [resp := state process: rq] ifError: [self fail].
+            connMock forgetAbout: #authenticates:with:.
+
+            self
+              should: [connMock state class = AuthorizedState];
+              should: [resp class = ServerInfoResponse]
+        ]
+
+        testCheckLoginFail [
+            | rq failed |
+            rq := self requestFrom: LoginTest loginSample.
+            connMock
+                on: #authenticates:with:
+                do: [:creds :magic | false].
+            [state process: rq] on: FatalError do: [failed := true].
+            connMock forgetAbout: #authenticates:with:.
+            self assert: failed.
+        ]
+    ]
+
+    ShampooTestCase subclass: ShampooConnectionTest [
+        | conn sockMock srvMock |
+        
+        setUp [
+            sockMock := ShampooGenericMock new.
+            sockMock
+                ignore: #nextPutAll:;
+                ignore: #crlf;
+                ignore: #flush.
+
+            srvMock := ShampooGenericMock new.
+            conn := ClientConnection
+               on: sockMock
+               onDisconnect: [:cl | srvMock gotDisconnect]
+               parent: srvMock.
+        ]
+
+        testFetchMessages [
+            | msg r |
+            
+            msg := 'Content-Length: 9', String crlf,
+                String crlf,
+                'Smalltalk'.
+            
+            sockMock
+                on: #ensureReadable do: [true];
+                on: #availableBytes do: [msg size];
+                on: #next: do: [:n | msg].
+                
+            r := conn fetchMessages.
+            self should: [r first = 'Smalltalk'].
+        ]
+
+        testFetchMessagesFail [
+            | caught |
+            sockMock on: #ensureReadable do: [Error new signal].
+            [conn fetchMessages]
+            on: ClientDisconnected do: [:e | caught := true].
+            self assert: caught.
+        ]
+
+        testSend [
+            | packetMock strings |
+            strings := OrderedCollection new.
+            packetMock := ShampooGenericMock new.
+            packetMock on: #asXML do: ['Shampoo'].
+            "I think that testing this thing by catching
+             #nextPutAll is not a very good idea."
+            sockMock on: #nextPutAll: do: [:s | strings add: s].
+            conn send: packetMock.
+            self
+                should: [strings first = 'Content-Length: 9'];
+                should: [strings second = '''Shampoo'''].
+        ]
+
+        testDisconnect [
+            | got |
+            srvMock on: #gotDisconnect do: [got := true].
+            sockMock
+                on: #isPeerAlive do: [true];
+                on: #ensureReadable do: [Error new signal].
+            conn go.
+            self assert: got.
         ]
     ]
 ]
