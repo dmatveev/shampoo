@@ -107,7 +107,7 @@ prove his identity, I will switch the session to the AutiorizedState.'>
             "Anti-If campaign probably hates me."
             aRequest class == LoginRequest
                 ifTrue: [^self checkLogin: aRequest]
-                ifFalse: [self fatal]
+                ifFalse: [FatalError new signal]
         ]
 
         checkLogin: aRequest [
@@ -116,13 +116,7 @@ prove his identity, I will switch the session to the AutiorizedState.'>
             (connection server authenticates: aRequest creds with: self magic)
                 ifTrue: [self switchTo: AuthorizedState.
                          ^ServerInfoResponse id: aRequest id]
-                ifFalse: [self fatal]
-        ]
-
-        fatal [
-            <category: 'private'>
-            "TODO: Drop this method?"
-            FatalError new signal
+                ifFalse: [FatalError new signal]
         ]
 
         magic [

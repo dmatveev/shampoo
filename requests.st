@@ -314,10 +314,8 @@ in a concrete class from a concrete namespace.'>
             side = #instance
                 ifTrue: ["Looks a bit kludgy, but currently I dont know how to make it better
                           TODO: refactor"
-                         currentSpace := Namespace current.
-
                          parent := (Smalltalk at: superSpace asSymbol) at: superName asSymbol.
-
+                         currentSpace := Namespace current.
                          Namespace current: targetSpace.
 
                          [class := parent

@@ -26,9 +26,10 @@ String class extend [
 ]
 
 Namespace current: Sockets [
-StreamSocket extend [
-    crlf [
-        <category: '*shampoo-hacks'>
-        self nextPutAll: String crlf
+    StreamSocket extend [
+        crlf [
+            <category: '*shampoo-hacks'>
+            self nextPutAll: String crlf
+        ]
     ]
-]]
+]
