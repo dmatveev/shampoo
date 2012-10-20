@@ -1,0 +1,20 @@
+This is a Shampoo implementation for GNU Smalltalk
+--------------------------------------------------
+
+Installation:
+
+        $ gst-package -t ~/.st package.xml
+
+Do not forget to run tests to check if all is ok:
+
+        $ gst-sunit -p Shampoo
+
+To create and run a basic Shampoo image, invoke:
+
+        $ gst-load -iI shampoo.im Shampoo
+        $ gst-remote -I shampoo.im --daemon
+        $ gst-remote -e "Shampoo.ShampooServer startOn: 9092 login: 'login' pass: '1234'"
+
+Shampoo project homepage:
+
+        http://dmitrymatveev.co.uk/shampoo
