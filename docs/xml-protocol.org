@@ -15,6 +15,7 @@
 | 12 Jun 2011 | Dmitry Matveev | Added '*' support for Method request                                |
 | 24 Sep 2011 | Dmitry Matveev | Added a section about authentication mechanism                      |
 | 23 Oct 2012 | Dmitry Matveev | Added a note about the "Content-Length:" header                     |
+|             |                | Added "RemoveClass" and "RemoveMethod" messages                     |
 
 
 * Overview
@@ -313,9 +314,37 @@ and others) must be escaped before sending (to &amp; &lt; &gt; etc).
 *** Response
 See *OperationalResponse*
 
-** TODO RemoveClass
+** RemoveClass
 
-** TODO RemoveMethod
+*** Description
+Unregister the specified class from the system.
+
+*** Syntax
+
+#+BEGIN_EXAMPLE
+
+  <request id="129" type="RemoveClass" namespace="SomeNamespace" class="SomeClass" />
+
+#+END_EXAMPLE
+
+*** Response
+See *OperationalResponse*
+
+** RemoveMethod
+
+*** Description
+Remove a method from a class.
+
+*** Syntax
+
+#+BEGIN_EXAMPLE
+
+  <request id="33" type="RemoveMethod" namespace="SomeNamespace" class="SomeClass" side="instance" method="aMethodName:with:args:" />
+
+#+END_EXAMPLE
+
+*** Response
+See *OperationalResponse*
 
 ** DoIt
 
