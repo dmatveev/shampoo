@@ -459,16 +459,14 @@ evaluates an expession and returns its result in a printed form to the client.'>
             | namespace parent class |
             [namespace := Smalltalk at: spaceName asSymbol.
              class := namespace classAt: className asSymbol.
+
+             class subclasses isEmpty ifFalse:
+             [^OperationalResponse failure: id].
+
              parent := class superclass.
              parent removeSubclass: class.
-             namespace removeKey: className asSymbol ifAbsent:
-             [ Transcript
-                   << 'Suddenly there is no ';
-                   << className;
-                   << ' in ';
-                   << namespace;
-                   cr.
-             ]
+             parent class removeSubclass: class class.
+             namespace removeKey: className asSymbol ifAbsent: []
             ] ifError: [^OperationalResponse failure: id].
             ^OperationalResponse success: id.
         ]

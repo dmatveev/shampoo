@@ -758,7 +758,6 @@ for tests"
 
         setUp [
             foo := Object subclass: #ShampooFooClass.
-
             bar := Object subclass: #ShampooBarClass.
             baz := bar subclass: #ShampooBazClass.
         ]
@@ -767,36 +766,39 @@ for tests"
             ^aNamespace includesKey: aClassName
         ]
 
-        have: aClassName subclassedFrom: aClass in: aNamespace [
-            ^(self have: aClassName in: aNamespace) and:
-             [self class: aClassName isSubclassOf: aClass]
+        have: aSymbol isSubclassOf: aClass [
+            ^aClass allSubclasses contains: [:cl | cl name = aSymbol]
         ]
 
-        class: aSymbol isSubclassOf: aClass [
-            ^aClass allSubclasses contains: [:cl | cl name = aSymbol]
+        have: aSymbol isSubclassInstanceOf: aMetaclass [
+            ^aMetaclass allSubclasses contains:
+            [:mcl | mcl instanceClass name = aSymbol].
         ]
 
         testSimpleRemove [
             | rq |
             rq := self requestFrom: self removeFooSample.
-            rq execute.
-            self shouldnt:
-            [self have: #ShampooFooClass
-                  subclassedFrom: Object
-                  in: Smalltalk].
+            self
+                should: [rq execute success].
+            self
+                shouldnt: [self have: #ShampooFooClass in: Smalltalk];
+                shouldnt: [self have: #ShampooFooClass isSubclassOf: Object];
+                shouldnt: [self have: #ShampooFooClass isSubclassInstanceOf: Object class]
         ]
 
         testHierarchyRemove [
             | rq |
             rq := self requestFrom: self removeBarSample.
-            rq execute.
-            self shouldnt:
-                [self have: #ShampooBarClass
-                      subclassedFrom: Object
-                      in: Smalltalk];
-                 should:
-                [self have: #ShampooBazClass
-                      in: Smalltalk].
+            self
+                shouldnt: [rq execute success].
+            self
+                should:   [self have: #ShampooBarClass in: Smalltalk];
+                should:   [self have: #ShampooBarClass isSubclassOf: Object];
+                should:   [self have: #ShampooBarClass isSubclassInstanceOf: Object class].
+            self
+                should:   [self have: #ShampooBazClass in: Smalltalk];
+                should:   [self have: #ShampooBazClass isSubclassOf: Object];
+                should:   [self have: #ShampooBazClass isSubclassInstanceOf: Object class]
         ]
 
         removeFooSample [
