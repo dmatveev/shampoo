@@ -14,6 +14,8 @@
 | 09 Jun 2011 | Dmitry Matveev | Authorization & server info requests/responses                      |
 | 12 Jun 2011 | Dmitry Matveev | Added '*' support for Method request                                |
 | 24 Sep 2011 | Dmitry Matveev | Added a section about authentication mechanism                      |
+| 23 Oct 2012 | Dmitry Matveev | Added a note about the "Content-Length:" header                     |
+
 
 * Overview
 
@@ -32,7 +34,6 @@ provides a set of commands that allow to...
 Shampoo is functioning in a request/response scheme. Client sends a request to
 the server and server replies with a response. There are some messages that can
 be sent by a server outside of this scheme, i.e. without an appropriate request.
-
 
 * Authentication
 
@@ -55,6 +56,16 @@ text form, it stores only an MD5 checksum too.
 
 
 * Basics
+
+** Message structure
+
+Every message sent from or to Shampoo begins a line:
+#+BEGIN_EXAMPLE
+  Content-Length: XXXX
+#+END_EXAMPLE
+where XXXX is the length of the message payload. The line is followed with
+"\r\n\r\n" characters (i.e. two CRLFs). Then there is the payload data, XXXX bytes
+long, followed by CRLF.
 
 ** Request structure
 
@@ -104,7 +115,7 @@ by response type (2).
   
 * Requests
 
-10** Login
+** Login
 
 *** Description
 Provide credentials to server for authorization.
