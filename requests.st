@@ -439,6 +439,7 @@ evaluates an expession and returns its result in a printed form to the client.'>
     Request subclass: RemoveClassRequest [
         <category: 'Shampoo-Requests'>
         <comment: 'My instances remove classes when executed. Be careful!'>
+
         | spaceName className |
 
         RemoveClassRequest class >> is: aString [
@@ -448,7 +449,7 @@ evaluates an expession and returns its result in a printed form to the client.'>
 
         init: anXML [
             <category: 'private'>
-            | attrs namespace class |
+            | attrs |
             attrs := anXML attrMap.
             spaceName := attrs at: 'namespace'.
             className := attrs at: 'class'
@@ -467,6 +468,40 @@ evaluates an expession and returns its result in a printed form to the client.'>
              parent removeSubclass: class.
              parent class removeSubclass: class class.
              namespace removeKey: className asSymbol ifAbsent: []
+            ] ifError: [^OperationalResponse failure: id].
+            ^OperationalResponse success: id.
+        ]
+    ]
+
+    Request subclass: RemoveMethodRequest [
+        <category: 'Shampoo-Requests'>
+        <comment: 'My instances remove methods from classes when executed. Be careful!'>
+
+        | spaceName className side selector |
+
+        RemoveMethodRequest class >> is: aString [
+            <category: 'identification'>
+            ^aString = 'RemoveMethod'
+        ]
+
+        init: anXML [
+            <category: 'private'>
+            | attrs |
+            attrs := anXML attrMap.
+            spaceName := attrs at: 'namespace'.
+            className := attrs at: 'class'.
+            side := (attrs at: 'side') asSymbol.
+            selector := (attrs at: 'method') asSymbol.
+        ]
+
+        execute [
+            <category: 'execution'>
+            | namespace class |
+            [namespace := Smalltalk at: spaceName asSymbol.
+             class := namespace classAt: className asSymbol.
+             (side = #class) ifTrue: [class := class class].
+             class removeSelector: selector.
+   
             ] ifError: [^OperationalResponse failure: id].
             ^OperationalResponse success: id.
         ]

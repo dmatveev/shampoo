@@ -48,6 +48,10 @@ Namespace current: Smalltalk [
             <category: 'Shampoo-Tests'>
         ]
 
+        Object subclass: SampleClassF [
+            <category: 'Shampoo-Tests'>
+        ]
+
         Object subclass: SampleClassSide [
             <category: 'Shampoo-Tests'>
         ]
@@ -807,6 +811,35 @@ for tests"
 
         removeBarSample [
             ^'<request id="129" type="RemoveClass" namespace="Smalltalk" class="ShampooBarClass" />'
+        ]
+    ]
+
+    ShampooTestCase subclass: ShampooRemoveMethodTest [
+        setUp [
+            ShampooSamples.SampleClassF compile: 'foo [^123]'.
+            ShampooSamples.SampleClassF class compile: 'bar [^#bar]'.
+        ]
+
+        testInstanceSide [
+            | rq |
+            rq := self requestFrom: self removeFooSample.
+            self should: [rq execute success].
+            self shouldnt: [ShampooSamples.SampleClassF canUnderstand: #foo ]
+        ]
+
+        testClassSide [
+            | rq |
+            rq := self requestFrom: self removeBarSample.
+            self should: [rq execute success].
+            self shouldnt: [ShampooSamples.SampleClassF class canUnderstand: #bar ]
+        ]
+
+        removeFooSample [
+            ^'<request id="33" type="RemoveMethod" namespace="ShampooSamples" class="SampleClassF" side="instance" method="foo" />'
+        ]
+    
+        removeBarSample  [
+            ^'<request id="33" type="RemoveMethod" namespace="ShampooSamples" class="SampleClassF" side="class" method="bar" />'
         ]
     ]
 ]
