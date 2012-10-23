@@ -752,4 +752,59 @@ for tests"
             self assert: got.
         ]
     ]
+
+    ShampooTestCase subclass: ShampooRemoveClassTest [
+        | foo bar baz |
+
+        setUp [
+            foo := Object subclass: #ShampooFooClass.
+
+            bar := Object subclass: #ShampooBarClass.
+            baz := bar subclass: #ShampooBazClass.
+        ]
+
+        have: aClassName in: aNamespace [
+            ^aNamespace includesKey: aClassName
+        ]
+
+        have: aClassName subclassedFrom: aClass in: aNamespace [
+            ^(self have: aClassName in: aNamespace) and:
+             [self class: aClassName isSubclassOf: aClass]
+        ]
+
+        class: aSymbol isSubclassOf: aClass [
+            ^aClass allSubclasses contains: [:cl | cl name = aSymbol]
+        ]
+
+        testSimpleRemove [
+            | rq |
+            rq := self requestFrom: self removeFooSample.
+            rq execute.
+            self shouldnt:
+            [self have: #ShampooFooClass
+                  subclassedFrom: Object
+                  in: Smalltalk].
+        ]
+
+        testHierarchyRemove [
+            | rq |
+            rq := self requestFrom: self removeBarSample.
+            rq execute.
+            self shouldnt:
+                [self have: #ShampooBarClass
+                      subclassedFrom: Object
+                      in: Smalltalk];
+                 should:
+                [self have: #ShampooBazClass
+                      in: Smalltalk].
+        ]
+
+        removeFooSample [
+            ^'<request id="129" type="RemoveClass" namespace="Smalltalk" class="ShampooFooClass" />'
+        ]
+
+        removeBarSample [
+            ^'<request id="129" type="RemoveClass" namespace="Smalltalk" class="ShampooBarClass" />'
+        ]
+    ]
 ]

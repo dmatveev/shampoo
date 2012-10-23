@@ -435,4 +435,42 @@ evaluates an expession and returns its result in a printed form to the client.'>
             ^PrintItResponse id: id value: s
         ]
     ]
+
+    Request subclass: RemoveClassRequest [
+        <category: 'Shampoo-Requests'>
+        <comment: 'My instances remove classes when executed. Be careful!'>
+        | spaceName className |
+
+        RemoveClassRequest class >> is: aString [
+            <category: 'identification'>
+            ^aString = 'RemoveClass'
+        ]
+
+        init: anXML [
+            <category: 'private'>
+            | attrs namespace class |
+            attrs := anXML attrMap.
+            spaceName := attrs at: 'namespace'.
+            className := attrs at: 'class'
+        ]
+
+        execute [
+            <category: 'execution'>
+            | namespace parent class |
+            [namespace := Smalltalk at: spaceName asSymbol.
+             class := namespace classAt: className asSymbol.
+             parent := class superclass.
+             parent removeSubclass: class.
+             namespace removeKey: className asSymbol ifAbsent:
+             [ Transcript
+                   << 'Suddenly there is no ';
+                   << className;
+                   << ' in ';
+                   << namespace;
+                   cr.
+             ]
+            ] ifError: [^OperationalResponse failure: id].
+            ^OperationalResponse success: id.
+        ]
+    ]
 ]

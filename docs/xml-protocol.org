@@ -383,7 +383,7 @@ See *PrintIt*
 ** OperationalResponse
 
 *** Description
-OperationalResponse is a generic response from a server that indicates success of failure.
+OperationalResponse is a generic response from a server that indicates success or failure.
 
 *** Syntax
 

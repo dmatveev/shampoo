@@ -41,6 +41,7 @@
     <sunit>Shampoo.MessageParserTest</sunit>
     <sunit>Shampoo.ShampooNotAuthStateTest</sunit>
     <sunit>Shampoo.ShampooConnectionTest</sunit>
+    <sunit>Shampoo.ShampooRemoveClassTest</sunit>
     <filein>tests.st</filein>
   </test>
 </package>
