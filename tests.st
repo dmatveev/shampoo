@@ -950,24 +950,24 @@ anotherMethodWithCategory [
     ]
     
     ShampooTestCase subclass: ShampooRemoveCategoryTest [
-        | selectors |
+        selectors [
+            ^#( #myCategoryWillBeRemoved1
+                #myCategoryWillBeRemoved2
+                #myCategoryWillBeRemoved3 )
+        ]
 
         setUp [
-            selectors := #( #myCategoryWillBeRemoved1
-                            #myCategoryWillBeRemoved2
-                            #myCategoryWillBeRemoved3 ).
-
-            selectors do:
+            self selectors do:
             [:each || method |
                     method := ShampooSamples.SampleClassD
                               methodDictionary at: each.
                     method descriptor category: 'to be removed'].
 
-            (self requestFrom: removeCatSample) execute.
+            (self requestFrom: self removeCatSample) execute.
         ]
 
         testRemoval [
-            selectors do:
+            self selectors do:
             [:each || method |
                     method := ShampooSamples.SampleClassD
                               methodDictionary at: each.
@@ -980,10 +980,10 @@ anotherMethodWithCategory [
 '<request
   id="11"
   type="RemoveCategory"
-  namespace="SomeNamespace"
-  class="SomeClass"
+  namespace="ShampooSamples"
+  class="SampleClassD"
   side="instance"
-  category="category"
+  category="to be removed"
 />'
         ]
     ]
