@@ -43,6 +43,8 @@
     <sunit>Shampoo.ShampooConnectionTest</sunit>
     <sunit>Shampoo.ShampooRemoveClassTest</sunit>
     <sunit>Shampoo.ShampooRemoveMethodTest</sunit>
+    <sunit>Shampoo.ShampooChangeCategoryTest</sunit>
+    <sunit>Shampoo.ShampooRemoveCategoryTest</sunit>
     <filein>tests.st</filein>
   </test>
 </package>

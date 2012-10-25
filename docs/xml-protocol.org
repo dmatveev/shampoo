@@ -16,7 +16,8 @@
 | 24 Sep 2011 | Dmitry Matveev | Added a section about authentication mechanism                      |
 | 23 Oct 2012 | Dmitry Matveev | Added a note about the "Content-Length:" header                     |
 |             |                | Added "RemoveClass" and "RemoveMethod" messages                     |
-
+| 25 Oct 2012 | Dmitry Matveev | More on categories (changes in "CompileMethod" request, added       |
+|             |                | "ChangeCategory" and "RemoveCategory" requests                      |
 
 * Overview
 
@@ -174,7 +175,7 @@ Ask server to send us a class description from a concrete namespace
   <request id="15" type="Class" namespace="ConcreteNamespace" class="ConcreteClass" side="instance"/>
 #+END_EXAMPLE
 
-  SIDE option may have two possible values:
+  SIDE option can have two possible values:
   - "instance" - request for instance-side class information
   - "class"    - the same for the class side.
 
@@ -276,9 +277,11 @@ Compile a new class. Or recompile it, if the class is already exist.
   </request>
 #+END_EXAMPLE
 
-Instance variables must be registered in the class in the order specified by message.
+Instance variables must be registered in the class in the order specified by
+message.
 
-A class side can also be "compiled", but it is actually a modification, not a creation of a new class. So some parameters can be omitted in this case:
+A class side can also be "compiled", but it is actually a modification, not a
+creation of a new class. So some parameters can be omitted in this case:
 
 #+BEGIN_EXAMPLE
   <request id="80" type="CompileClass" namespace="SomeNamespace" class="SomeClass" side="class">
@@ -288,7 +291,8 @@ A class side can also be "compiled", but it is actually a modification, not a cr
   </request>
 #+END_EXAMPLE
 
-The side argument is optional, if not specified, the request will be considered as an "instance" one.
+The side argument is optional, if not specified, the request will be considered
+as an "instance" one.
 
 *** Response
 See *OperationalResoponse*
@@ -301,7 +305,13 @@ Ask server to compile a string of code to the specified class.
 *** Syntax
 
 #+BEGIN_EXAMPLE
-  <request id="80" type="CompileMethod" namespace="SomeNamespace" class="SomeClass" side="instance">
+  <request
+    id="80"
+    type="CompileMethod"
+    namespace="SomeNamespace"
+    class="SomeClass"
+    side="instance"
+    category="somecategory">
     sampleCompare: anInteger with: anotherInteger [
         ^ anInteger &gt; anotherInteger
     ]
@@ -310,6 +320,58 @@ Ask server to compile a string of code to the specified class.
 
 To preserve XML parser from going crazy, all suspicious symbols (such as &, >, <
 and others) must be escaped before sending (to &amp; &lt; &gt; etc).
+
+CATEGORY parameter specifies the method's category. If a method has no category,
+the CATEGORY value is set to "*".
+
+In GNU Smalltalk, the method's category can be specified in the method's source using
+the <category:> pragma. Actually, it is the only way to specify the method's category
+with the 3.x syntax. If the method source contains a <category:> pragma and its value
+differs from the CATEGORY value, the pragma's value will be used.
+
+*** Response
+See *OperationalResponse*
+
+** ChangeCategory
+
+*** Description
+Change the category of the selected method.
+
+*** Syntax
+
+#+BEGIN_EXAMPLE
+  <request
+    id="192"
+    type="ChangeCategory"
+    namespace="SomeNamespace"
+    class="SomeClass"
+    side="instance"
+    category="category"
+    method="selector"
+  />
+#+END_EXAMPLE
+
+*** Response
+See *OperationalResponse*
+
+** RemoveCategory
+
+*** Description
+Remove the specified category, mark all methods belonging to the category as
+'uncategorized'.
+
+*** Syntax
+
+#+BEGIN_EXAMPLE
+  <request
+    id="11"
+    type="RemoveCategory"
+    namespace="SomeNamespace"
+    class="SomeClass"
+    side="instance"
+    category="category"
+  /> 
+#+END_EXAMPLE
 
 *** Response
 See *OperationalResponse*
@@ -338,9 +400,14 @@ Remove a method from a class.
 *** Syntax
 
 #+BEGIN_EXAMPLE
-
-  <request id="33" type="RemoveMethod" namespace="SomeNamespace" class="SomeClass" side="instance" method="aMethodName:with:args:" />
-
+  <request
+    id="33"
+    type="RemoveMethod"
+    namespace="SomeNamespace"
+    class="SomeClass"
+    side="instance"
+    method="aMethodName:with:args:"
+  />
 #+END_EXAMPLE
 
 *** Response
