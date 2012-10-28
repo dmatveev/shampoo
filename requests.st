@@ -556,7 +556,7 @@ evaluates an expession and returns its result in a printed form to the client.'>
         <category: 'Shampoo-Requests'>
         <comment: 'My instances remove methods categories when executed.
 The methods of the removed category are marked as uncategorized.'>
-        
+         
         | spaceName className side cat |
 
         RemoveCategoryRequest class >> is: aString [
@@ -584,6 +584,43 @@ The methods of the removed category are marked as uncategorized.'>
              class methodDictionary values do:
              [:method | method descriptor category = cat
                         ifTrue: [method descriptor category: nil]]
+            ] ifError: [^OperationalResponse failure: id].
+            ^OperationalResponse success: id.
+        ]
+    ]
+
+    Request subclass: RenameCategoryRequest [
+        <category: 'Shampoo-Requests'>
+        <comment: 'My instances rename method categories in the class.'>
+         
+        | spaceName className side cat from to|
+
+        RenameCategoryRequest class >> is: aString [
+            <category: 'identification'>
+            ^aString = 'RenameCategory'
+        ]
+
+        init: anXML [
+            <category: 'private'>
+            | attrs |
+            attrs := anXML attrMap.
+            spaceName := attrs at: 'namespace'.
+            className := attrs at: 'class'.
+            side := (attrs at: 'side') asSymbol.
+            from := attrs at: 'from'.
+            to := attrs at: 'to'.
+        ]
+
+        execute [
+            <category: 'execution'>
+            | namespace class method |
+            [namespace := Smalltalk at: spaceName asSymbol.
+             class := namespace classAt: className asSymbol.
+             (side = #class) ifTrue: [class := class class].
+
+             class methodDictionary values do:
+             [:method | method descriptor category = from
+                        ifTrue: [method descriptor category: to]]
             ] ifError: [^OperationalResponse failure: id].
             ^OperationalResponse success: id.
         ]

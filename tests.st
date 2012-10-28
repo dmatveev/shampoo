@@ -1010,7 +1010,7 @@ anotherMethodWithCategory [
         setUp [
             rq := self requestFrom: self renameCatSample.
             
-            SampleClassG methodDictionary values do:
+            ShampooSamples.SampleClassG methodDictionary values do:
             [:each | each descriptor category: 'to be renamed'].
         ]
 
@@ -1019,7 +1019,7 @@ anotherMethodWithCategory [
             resp := rq execute.
             self should: [resp success].
 
-            SampleClassG methodDictionary values do:
+            ShampooSamples.SampleClassG methodDictionary values do:
             [:each | self should: [each descriptor category = 'finally renamed']]
         ]
 
