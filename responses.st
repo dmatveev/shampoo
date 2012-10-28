@@ -54,9 +54,10 @@ the server can send me any time, even without an appropriate request'>
 
     Response subclass: OperationalResponse [
         <category: 'Shampoo-Responses'>
-        <comment: 'My instances are used to hold a success/failure status of an operation. An operation is usually a result of a request execution.'>
+        <comment: 'My instances are used to hold a success/failure status of
+an operation. An operation is usually a result of a request execution.'>
 
-        | success |
+        | success message |
 
         OperationalResponse class >> success: anInteger [
             <category: 'instance creation'>
@@ -72,6 +73,19 @@ the server can send me any time, even without an appropriate request'>
                 yourself
         ]
 
+        OperationalResponse class >> failure: anInteger with: anError [
+            <category: 'instance creation'>
+            ^self failure: anInteger text: anError description
+        ]
+
+        OperationalResponse class >> failure: anInteger text: aString [
+            <category: 'instance creation'>
+            ^(OperationalResponse id: anInteger)
+                success: false;
+                message: aString;
+                yourself
+        ]
+
         statusString [
             <category: 'accessors'>
             ^success ifTrue: ['success'] ifFalse: ['failure']
@@ -82,6 +96,11 @@ the server can send me any time, even without an appropriate request'>
             success := aBoolean
         ]
 
+        message: aString [
+            <category: 'private'>
+            message := aString
+        ]
+
         type [
             <category: 'private'>
             ^'OperationalResponse'
@@ -89,9 +108,12 @@ the server can send me any time, even without an appropriate request'>
 
         asXML [
             <category: 'marshalling'>
-            ^(super asXML)
-                addAttribute: 'status' value: self statusString;
-                yourself
+            | r |
+            r := super asXML.
+            r addAttribute: 'status' value: self statusString.
+            message ifNotNil:
+            [r addNode: (ShampooXML.ShText text: message)].
+            ^r
         ]
     ]
 

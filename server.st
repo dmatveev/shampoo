@@ -30,7 +30,8 @@ text to the standard output, as the original Transcript does'>
 
         ShampooTranscript class >> fallback: aString [
             <category: 'transcript'>
-            oldAssoc ifNotNil: [oldAssoc key perform: oldAssoc value with: aString].
+            oldAssoc ifNotNil:
+            [oldAssoc key perform: oldAssoc value with: aString]
         ]
 
         ShampooTranscript class >> add: aServer [
@@ -187,8 +188,9 @@ is actually a finite state machine, see ConnectionState class and its subclasses
         process: anXMLRequest [
             <category: 'fsm'>
             | r xml |
-            [xml := ShampooXML.ShNode from: anXMLRequest
-            ] ifError: [^nil].
+            [xml := ShampooXML.ShNode from: anXMLRequest]
+            ifError: [^server inform:
+                      'Shampoo: failed to process request ', anXMLRequest].
             r := Request from: xml.
             [self send: (self state process: r)]
                  on: FatalError do: [:e | self drop]
@@ -284,7 +286,9 @@ connections and... hmm, looks like thats all.'>
             creds := aCreds.
 
             [server isOpen] whileTrue:
-                [[server waitForConnection] ifError: [^nil].
+                [[server waitForConnection]
+                 ifError: [^self inform:
+                           'Shampoo: failed to listen for incoming connections'].
                  [self acceptedClient go] fork]
         ]
 
@@ -329,6 +333,12 @@ connections and... hmm, looks like thats all.'>
              ShampooServer>>handleDisconnected:."
 
             ShampooTranscript remove: self
+        ]
+    
+        inform: aMessage [
+            <category: 'error handling'>
+            ShampooTranscript fallback: aMessage.
+            ^nil
         ]
     ]
 ]

@@ -46,6 +46,14 @@ has an appropriate Response subclass, and returns a Response object on #execute.
             <category: 'execution'>
             ^self subclassResponsibility
         ]
+
+        failSafe: aBlock [
+            <category: 'execution'>
+            aBlock
+            on: Error
+            do: [:err | ^OperationalResponse failure: id with: err].
+            ^OperationalResponse success: id
+        ]
     ]
 
     Request subclass: LoginRequest [
@@ -305,11 +313,10 @@ in a concrete class from a concrete namespace.'>
 
         execute [
             <category: 'execution'>
-            | parent class currentSpace targetSpace failed |
+            | parent class currentSpace targetSpace error |
 
             targetSpace := Smalltalk at: spaceName asSymbol.
             class := targetSpace at: className asSymbol ifAbsent: [nil].
-            failed := false.
 
             side = #instance
                 ifTrue: ["Looks a bit kludgy, but currently I dont know how to make it better
@@ -324,17 +331,17 @@ in a concrete class from a concrete namespace.'>
                             classVariableNames: classvars elementsString
                             poolDictionaries: '' " poolvars elementsString "
                             category: ''.
-                         ] on: Error do: [:e | e inspect. failed := true].
+                         ] on: Error do: [:err | error := err].
 
                          Namespace current: currentSpace]
 
                 ifFalse: [class := targetSpace at: className asSymbol ifAbsent: [nil].
                           [class class instanceVariableNames: instvars elementsString]
-                              on: Error do: [:e | e inspect. failed := true]].
+                              on: Error do: [:err | error := err]].
 
-            failed
-                ifTrue: [^OperationalResponse failure: id]
-                ifFalse: [^OperationalResponse success: id]
+            error isNil
+                ifTrue: [^OperationalResponse success: id]
+                ifFalse: [^OperationalResponse failure: id with: error]
         ]
     ]
 
@@ -367,8 +374,8 @@ method in the concrete class at the concrete namespace.'>
             class := (Smalltalk at: spaceName asSymbol) at: className asSymbol.
             (side = #class) ifTrue: [class := class class].
 
-            [method := class compile: source ifError: [^self fail]]
-            ifError: [^self fail].
+            [method := class compile: source]
+            on: Error do: [:err | ^self fail: err].
 
             (cat ~= '*')
             & (method descriptor category ~= cat)
@@ -378,14 +385,10 @@ method in the concrete class at the concrete namespace.'>
             ^OperationalResponse success: id
         ]
 
-        fail [
+        fail: anError [
             <category: 'execution'>
-            ^OperationalResponse failure: id
+            ^OperationalResponse failure: id with: anError
         ]
-    ]
-
-    Exception subclass: EvalFailure [
-        <category: 'Shampoo-Requests'>
     ]
 
     Request subclass: EvalRequest [
@@ -404,7 +407,7 @@ variables in "||" available. See my subclasses for more info.'>
 
         execute [
             <category: 'execution'>
-            ^[Behavior evaluate: code] ifError: [EvalFailure new signal].
+            ^Behavior evaluate: code
         ]
     ]
 
@@ -421,7 +424,9 @@ client.'>
 
         execute [
             <category: 'execution'>
-            [super execute] on: EvalFailure do: [:e | ^OperationalResponse failure: id].
+            [super execute]
+            on: Error
+            do: [:err | ^OperationalResponse failure: id with: err].
             ^OperationalResponse success: id
         ]
     ]
@@ -439,7 +444,9 @@ evaluates an expession and returns its result in a printed form to the client.'>
         execute [
             <category: 'execution'>
             | s |
-            [s := super execute] on: EvalFailure do: [:e | ^OperationalResponse failure: id].
+            [s := super execute]
+            on: Error
+            do: [:err | ^OperationalResponse failure: id with: err].
             ^PrintItResponse id: id value: s
         ]
     ]
@@ -465,19 +472,20 @@ evaluates an expession and returns its result in a printed form to the client.'>
 
         execute [
             <category: 'execution'>
-            | namespace parent class |
-            [namespace := Smalltalk at: spaceName asSymbol.
+            ^self failSafe:
+            [| namespace parent class |
+             namespace := Smalltalk at: spaceName asSymbol.
              class := namespace classAt: className asSymbol.
 
              class subclasses isEmpty ifFalse:
-             [^OperationalResponse failure: id].
+             [^OperationalResponse
+             failure: id
+             text: 'failed to remove class ', className, ', it has subclasses.'].
 
              parent := class superclass.
              parent removeSubclass: class.
              parent class removeSubclass: class class.
-             namespace removeKey: className asSymbol ifAbsent: []
-            ] ifError: [^OperationalResponse failure: id].
-            ^OperationalResponse success: id.
+             namespace removeKey: className asSymbol ifAbsent: []]
         ]
     ]
 
@@ -504,14 +512,12 @@ evaluates an expession and returns its result in a printed form to the client.'>
 
         execute [
             <category: 'execution'>
-            | namespace class |
-            [namespace := Smalltalk at: spaceName asSymbol.
+            ^self failSafe:
+            [| namespace class |
+             namespace := Smalltalk at: spaceName asSymbol.
              class := namespace classAt: className asSymbol.
              (side = #class) ifTrue: [class := class class].
-             class removeSelector: selector.
-   
-            ] ifError: [^OperationalResponse failure: id].
-            ^OperationalResponse success: id.
+             class removeSelector: selector]
         ]
     ]
 
@@ -539,16 +545,15 @@ evaluates an expession and returns its result in a printed form to the client.'>
 
         execute [
             <category: 'execution'>
-            | namespace class method |
-            [namespace := Smalltalk at: spaceName asSymbol.
+            ^self failSafe:
+            [| namespace class method |
+             namespace := Smalltalk at: spaceName asSymbol.
              class := namespace classAt: className asSymbol.
              (side = #class) ifTrue: [class := class class].
 
              method := class methodDictionary at: selector.
              method descriptor category:
-             (cat = '*' ifTrue: [nil] ifFalse: [cat])
-            ] ifError: [^OperationalResponse failure: id].
-            ^OperationalResponse success: id.
+             (cat = '*' ifTrue: [nil] ifFalse: [cat])]
         ]
     ]
 
@@ -576,16 +581,15 @@ The methods of the removed category are marked as uncategorized.'>
 
         execute [
             <category: 'execution'>
-            | namespace class method |
-            [namespace := Smalltalk at: spaceName asSymbol.
+            ^self failSafe:
+            [| namespace class method |
+             namespace := Smalltalk at: spaceName asSymbol.
              class := namespace classAt: className asSymbol.
              (side = #class) ifTrue: [class := class class].
 
              class methodDictionary values do:
              [:method | method descriptor category = cat
-                        ifTrue: [method descriptor category: nil]]
-            ] ifError: [^OperationalResponse failure: id].
-            ^OperationalResponse success: id.
+                        ifTrue: [method descriptor category: nil]]]
         ]
     ]
 
@@ -613,16 +617,15 @@ The methods of the removed category are marked as uncategorized.'>
 
         execute [
             <category: 'execution'>
-            | namespace class method |
-            [namespace := Smalltalk at: spaceName asSymbol.
+            ^self failSafe:
+            [| namespace class method |
+             namespace := Smalltalk at: spaceName asSymbol.
              class := namespace classAt: className asSymbol.
              (side = #class) ifTrue: [class := class class].
 
              class methodDictionary values do:
              [:method | method descriptor category = from
-                        ifTrue: [method descriptor category: to]]
-            ] ifError: [^OperationalResponse failure: id].
-            ^OperationalResponse success: id.
+                        ifTrue: [method descriptor category: to]]]
         ]
     ]
 ]

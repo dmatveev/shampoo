@@ -481,7 +481,15 @@ OperationalResponse is a generic response from a server that indicates success o
   <response id="80" type="OperationalResponse" status="success" />
 #+END_EXAMPLE
 
-STATUS can be "success" or "failure".
+STATUS can be "success" or "failure". In the case of failure, an OperationalResponse may also
+contain a textual description of the error occured:
+
+#+BEGIN_EXAMPLE
+  <response id="80" type="OperationalResponse" status="failure">
+    An exceptional condition has occurred, and has prevented normal
+    continuation of processing.
+  </response>
+#+END_EXAMPLE
 
 ** Namespaces
 
