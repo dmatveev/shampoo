@@ -343,7 +343,7 @@ in a concrete class from a concrete namespace.'>
         <comment: 'My instances represent a request to (re)compile a concrete
 method in the concrete class at the concrete namespace.'>
         
-        | className spaceName side source |
+        | className spaceName side source cat |
 
         CompileMethodRequest class >> is: aString [
             <category: 'identification'>
@@ -357,16 +357,24 @@ method in the concrete class at the concrete namespace.'>
             className := attrs at: 'class'.
             spaceName := attrs at: 'namespace'.
             side := (attrs at: 'side') asSymbol.
+            cat := attrs at: 'category'.
             source := anXML text
         ]
 
         execute [
             <category: 'execution'>
-            | class |
+            | class method |
             class := (Smalltalk at: spaceName asSymbol) at: className asSymbol.
             (side = #class) ifTrue: [class := class class].
 
-            [class compile: source ifError: [^self fail]] ifError: [^self fail].
+            [method := class compile: source ifError: [^self fail]]
+            ifError: [^self fail].
+
+            (cat ~= '*')
+            & (method descriptor category ~= cat)
+            & (method descriptor category = 'still unclassified')
+            ifTrue: [method descriptor category: cat].
+            
             ^OperationalResponse success: id
         ]
 
@@ -502,6 +510,117 @@ evaluates an expession and returns its result in a printed form to the client.'>
              (side = #class) ifTrue: [class := class class].
              class removeSelector: selector.
    
+            ] ifError: [^OperationalResponse failure: id].
+            ^OperationalResponse success: id.
+        ]
+    ]
+
+    Request subclass: ChangeCategoryRequest [
+        <category: 'Shampoo-Requests'>
+        <comment: 'My instances change methods categories when executed'>
+
+        | spaceName className side cat selector |
+            
+        ChangeCategoryRequest class >> is: aString [
+            <category: 'identification'>
+            ^aString = 'ChangeCategory'
+        ]
+
+        init: anXML [
+            <category: 'private'>
+            | attrs |
+            attrs := anXML attrMap.
+            spaceName := attrs at: 'namespace'.
+            className := attrs at: 'class'.
+            side := (attrs at: 'side') asSymbol.
+            cat := (attrs at: 'category').
+            selector := (attrs at: 'method') asSymbol.
+        ]
+
+        execute [
+            <category: 'execution'>
+            | namespace class method |
+            [namespace := Smalltalk at: spaceName asSymbol.
+             class := namespace classAt: className asSymbol.
+             (side = #class) ifTrue: [class := class class].
+
+             method := class methodDictionary at: selector.
+             method descriptor category:
+             (cat = '*' ifTrue: [nil] ifFalse: [cat])
+            ] ifError: [^OperationalResponse failure: id].
+            ^OperationalResponse success: id.
+        ]
+    ]
+
+    Request subclass: RemoveCategoryRequest [
+        <category: 'Shampoo-Requests'>
+        <comment: 'My instances remove methods categories when executed.
+The methods of the removed category are marked as uncategorized.'>
+         
+        | spaceName className side cat |
+
+        RemoveCategoryRequest class >> is: aString [
+            <category: 'identification'>
+            ^aString = 'RemoveCategory'
+        ]
+
+        init: anXML [
+            <category: 'private'>
+            | attrs |
+            attrs := anXML attrMap.
+            spaceName := attrs at: 'namespace'.
+            className := attrs at: 'class'.
+            side := (attrs at: 'side') asSymbol.
+            cat := (attrs at: 'category').
+        ]
+
+        execute [
+            <category: 'execution'>
+            | namespace class method |
+            [namespace := Smalltalk at: spaceName asSymbol.
+             class := namespace classAt: className asSymbol.
+             (side = #class) ifTrue: [class := class class].
+
+             class methodDictionary values do:
+             [:method | method descriptor category = cat
+                        ifTrue: [method descriptor category: nil]]
+            ] ifError: [^OperationalResponse failure: id].
+            ^OperationalResponse success: id.
+        ]
+    ]
+
+    Request subclass: RenameCategoryRequest [
+        <category: 'Shampoo-Requests'>
+        <comment: 'My instances rename method categories in the class.'>
+         
+        | spaceName className side cat from to|
+
+        RenameCategoryRequest class >> is: aString [
+            <category: 'identification'>
+            ^aString = 'RenameCategory'
+        ]
+
+        init: anXML [
+            <category: 'private'>
+            | attrs |
+            attrs := anXML attrMap.
+            spaceName := attrs at: 'namespace'.
+            className := attrs at: 'class'.
+            side := (attrs at: 'side') asSymbol.
+            from := attrs at: 'from'.
+            to := attrs at: 'to'.
+        ]
+
+        execute [
+            <category: 'execution'>
+            | namespace class method |
+            [namespace := Smalltalk at: spaceName asSymbol.
+             class := namespace classAt: className asSymbol.
+             (side = #class) ifTrue: [class := class class].
+
+             class methodDictionary values do:
+             [:method | method descriptor category = from
+                        ifTrue: [method descriptor category: to]]
             ] ifError: [^OperationalResponse failure: id].
             ^OperationalResponse success: id.
         ]

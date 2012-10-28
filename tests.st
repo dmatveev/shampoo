@@ -42,6 +42,22 @@ Namespace current: Smalltalk [
 
         Object subclass: SampleClassD [
             <category: 'Shampoo-Tests'>
+
+            methodWithExistingCategory [
+                <category: 'change me'>
+            ]
+
+            myCategoryWillBeRemoved1 [
+                <category: 'to be removed'>
+            ]
+
+            myCategoryWillBeRemoved2 [
+                <category: 'to be removed'>
+            ]
+
+            myCategoryWillBeRemoved3 [
+                <category: 'to be removed'>
+            ]
         ]
 
         nil subclass: SampleClassE [
@@ -50,6 +66,22 @@ Namespace current: Smalltalk [
 
         Object subclass: SampleClassF [
             <category: 'Shampoo-Tests'>
+        ]
+
+        Object subclass: SampleClassG [
+            <category: 'Shampoo-Tests'>
+
+            foo [
+                <category: 'to be renamed'>
+            ]
+
+            bar [
+                <category: 'to be renamed'>
+            ]
+
+            baz [
+                <category: 'to be renamed'>
+            ]
         ]
 
         Object subclass: SampleClassSide [
@@ -447,25 +479,81 @@ for tests"
     ShampooTestCase subclass: CompileMethodTest [
         <category: 'Shampoo-Tests'>
 
-        | compileMethod |
-
         setUp [
-            compileMethod := self requestFrom: self compileMethodSample
+            (self requestFrom: self compileMethodSample) execute.
+            (self requestFrom: self compileMethodCatSample) execute.
+            (self requestFrom: self compileMethodCatOvwrSample) execute.
         ]
 
-        testCompileMethod [
-            | r value |
-            r := compileMethod execute.
+        testCompiledMethod [
+            | value |
             value := ShampooSamples.SampleClassD new sampleCompiledMethod: 11.
             self should: [value = 42]
         ]
 
+        testMethodNoCategory [
+            | method |
+            method := ShampooSamples.SampleClassD
+                      methodDictionary at: #sampleCompiledMethod:.
+            self should:
+            [method descriptor category = 'still unclassified']
+        ]
+
+        testMethodCategory [
+            | method |
+            method := ShampooSamples.SampleClassD
+                      methodDictionary at: #sampleMethodWithCategory.
+            self should:
+            [method descriptor category = 'some category']
+        ]
+
+        testMethodCategoryOverwrite [
+            | method |
+            method := ShampooSamples.SampleClassD
+                      methodDictionary at: #anotherMethodWithCategory.
+            self should:
+            [method descriptor category = 'used one']
+        ]
+
         compileMethodSample [
-            ^'<request id="80" type="CompileMethod" namespace="ShampooSamples" class="SampleClassD" side="instance">
-    sampleCompiledMethod: anInteger [
-        ^anInteger * 4 - 2
-    ]
-  </request>'
+            ^
+'<request id="80"
+  type="CompileMethod"
+  namespace="ShampooSamples"
+  class="SampleClassD"
+  side="instance"
+  category="*">
+sampleCompiledMethod: anInteger [
+    ^anInteger * 4 - 2
+]
+</request>'
+        ]
+
+        compileMethodCatSample [
+            ^
+'<request id="80"
+  type="CompileMethod"
+  namespace="ShampooSamples"
+  class="SampleClassD"
+  side="instance"
+  category="some category">
+sampleMethodWithCategory [
+]
+</request>'
+        ]
+
+        compileMethodCatOvwrSample [
+            ^
+'<request id="80"
+  type="CompileMethod"
+  namespace="ShampooSamples"
+  class="SampleClassD"
+  side="instance"
+  category="unused category">
+anotherMethodWithCategory [
+   &lt;category: ''used one''&gt;
+]
+</request>'
         ]
     ]
 
@@ -840,6 +928,112 @@ for tests"
     
         removeBarSample  [
             ^'<request id="33" type="RemoveMethod" namespace="ShampooSamples" class="SampleClassF" side="class" method="bar" />'
+        ]
+    ]
+
+    ShampooTestCase subclass: ShampooChangeCategoryTest [
+        | rq foo |
+
+        setUp [
+            | method |
+            method := ShampooSamples.SampleClassD methodDictionary
+                      at: #methodWithExistingCategory.
+            method descriptor category: 'change me'.
+
+            rq := self requestFrom: self changeCatSample.
+        ]
+
+        testChange [
+            | method |
+            rq execute.
+            method := ShampooSamples.SampleClassD methodDictionary
+                      at: #methodWithExistingCategory.
+            self should: [method descriptor category = 'changed']
+        ]
+       
+        changeCatSample [
+            ^
+'<request
+  id="192"
+  type="ChangeCategory"
+  namespace="ShampooSamples"
+  class="SampleClassD"
+  side="instance"
+  category="changed"
+  method="methodWithExistingCategory"
+/>'
+        ]
+    ]
+    
+    ShampooTestCase subclass: ShampooRemoveCategoryTest [
+        selectors [
+            ^#( #myCategoryWillBeRemoved1
+                #myCategoryWillBeRemoved2
+                #myCategoryWillBeRemoved3 )
+        ]
+
+        setUp [
+            self selectors do:
+            [:each || method |
+                    method := ShampooSamples.SampleClassD
+                              methodDictionary at: each.
+                    method descriptor category: 'to be removed'].
+
+            (self requestFrom: self removeCatSample) execute.
+        ]
+
+        testRemoval [
+            self selectors do:
+            [:each || method |
+                    method := ShampooSamples.SampleClassD
+                              methodDictionary at: each.
+                    self should: [method descriptor category =
+                                  'still unclassified']]
+        ]
+
+        removeCatSample [
+            ^
+'<request
+  id="11"
+  type="RemoveCategory"
+  namespace="ShampooSamples"
+  class="SampleClassD"
+  side="instance"
+  category="to be removed"
+/>'
+        ]
+    ]
+
+    ShampooTestCase subclass: RenameCategoryTest [
+        | rq |
+
+        setUp [
+            rq := self requestFrom: self renameCatSample.
+            
+            ShampooSamples.SampleClassG methodDictionary values do:
+            [:each | each descriptor category: 'to be renamed'].
+        ]
+
+        testCategoryRename [
+            | resp |
+            resp := rq execute.
+            self should: [resp success].
+
+            ShampooSamples.SampleClassG methodDictionary values do:
+            [:each | self should: [each descriptor category = 'finally renamed']]
+        ]
+
+        renameCatSample [
+            ^
+'<request
+  id="133"
+  type="RenameCategory"
+  namespace="ShampooSamples"
+  class="SampleClassG"
+  side="instance"
+  from="to be renamed"
+  to="finally renamed"
+/>'
         ]
     ]
 ]
