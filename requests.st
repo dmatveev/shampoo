@@ -14,7 +14,7 @@ has an appropriate Response subclass, and returns a Response object on #execute.
             | attrs class |
             attrs := anXML attrMap.
             class := Request allSubclasses detect:
-                [:each | (each respondsTo: #is:) and: [each is: (attrs at: 'type')]].
+            [:each | (each respondsTo: #is:) and: [each is: (attrs at: 'type')]].
             ^(class new: (attrs at: 'id') asInteger)
                 init: anXML;
                 yourself

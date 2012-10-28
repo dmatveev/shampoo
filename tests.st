@@ -91,8 +91,8 @@ Namespace current: Smalltalk [
 ]
 
 Namespace current: Shampoo [
-    "We do not need these methods in the original implementation but do need it
-for tests"
+    "We do not need these methods in the original implementation but
+     do need it for tests"
 
     Response extend [
         id [
@@ -169,9 +169,10 @@ for tests"
         ]
 
         LoginTest class >> loginSample [
-            ^'<request id="25" type="Login">
-      <creds login="dmitry" magic="0bf2f198be57c763af1c9a6f2359fdc8" />
-  </request>'
+            ^
+'<request id="25" type="Login">
+  <creds login="dmitry" magic="0bf2f198be57c763af1c9a6f2359fdc8" />
+</request>'
         ]
 
         LoginTest class >> authInfoSample [
@@ -200,12 +201,14 @@ for tests"
         ]
 
         testIndirectSubspaces [
-            "Currently Shampoo supports only 'root' namespaces. Indirect subspaces should not
-             be included in the response"
+            "Currently Shampoo supports only 'root' namespaces.
+             Indirect ones should not be included in the response"
             | indirect |
-            indirect := [Namespace allInstances detect: [:each | each environment ~= Smalltalk]]
+            indirect := [Namespace allInstances detect:
+                        [:each | each environment ~= Smalltalk]]
                         ifError: [nil].
-            indirect ifNotNil: [self shouldnt: [items includes: indirect name]]
+            indirect ifNotNil:
+            [self shouldnt: [items includes: indirect name]]
         ]
 
         namespacesSample [
@@ -231,7 +234,8 @@ for tests"
         ]
 
         classesSample [
-            ^'<request id="10" type="Classes" namespace="ShampooSamples" />'
+            ^
+'<request id="10" type="Classes" namespace="ShampooSamples" />'
         ]
     ]
 
@@ -288,18 +292,21 @@ for tests"
         ]
 
         classSample [
-            ^'<request id="15" type="Class" namespace="ShampooSamples"
-               class="SampleClassA" side="instance"/>'
+            ^
+'<request id="15" type="Class" namespace="ShampooSamples" 
+class="SampleClassA" side="instance"/>'
         ]
 
         nilSubclassSample [
-            ^'<request id="15" type="Class" namespace="ShampooSamples"
-               class="SampleClassE" side="instance"/>'
+            ^
+'<request id="15" type="Class" namespace="ShampooSamples"
+class="SampleClassE" side="instance"/>'
         ]
 
         classSideSample [
-            ^'<request id="15" type="Class" namespace="ShampooSamples"
-               class="SampleClassA" side="class"/>'
+            ^
+'<request id="15" type="Class" namespace="ShampooSamples"
+class="SampleClassA" side="class"/>'
         ]
     ]
 
@@ -329,13 +336,15 @@ for tests"
         ]
 
         catsSample [
-            ^'<request id="500" type="Categories" namespace="ShampooSamples"
-               class="SampleClassB" side="instance"/>'
+            ^
+'<request id="500" type="Categories" namespace="ShampooSamples"
+class="SampleClassB" side="instance"/>'
         ]
 
         emptyCatsSample [
-            ^'<request id="500" type="Categories" namespace="ShampooSamples"
-               class="SampleClassA" side="instance"/>'
+            ^
+'<request id="500" type="Categories" namespace="ShampooSamples"
+class="SampleClassA" side="instance"/>'
         ]
     ]
 
@@ -370,13 +379,15 @@ for tests"
         ]
 
         methodsSample [
-            ^'<request id="500" type="Methods" namespace="ShampooSamples"
-               class="SampleClassB" side="instance" category="sample-category"/>'
+            ^
+'<request id="500" type="Methods" namespace="ShampooSamples"
+class="SampleClassB" side="instance" category="sample-category"/>'
         ]
 
         asteriskSample [
-            ^'<request id="500" type="Methods" namespace="ShampooSamples"
-               class="SampleClassB" side="instance" category="*"/>'
+            ^
+'<request id="500" type="Methods" namespace="ShampooSamples"
+class="SampleClassB" side="instance" category="*"/>'
         ]
     ]
 
@@ -397,8 +408,10 @@ for tests"
         ]
 
         methodSample [
-            ^'<request id="123" type="MethodSource" namespace="ShampooSamples"
-               class="SampleClassB" side="instance" method="doSomethingElse:withArg:"/>'
+            ^
+'<request id="123" type="MethodSource" namespace="ShampooSamples"
+class="SampleClassB" side="instance"
+method="doSomethingElse:withArg:"/>'
         ]
     ]
 
@@ -434,17 +447,23 @@ for tests"
         ]
 
         compileClassSample [
-            ^'<request id="80" type="CompileClass" superspace="Smalltalk" super="Object" namespace="ShampooSamples" class="SampleClassC">
-      <instvar>one</instvar>
-      <instvar>two</instvar>
-      <instvar>three</instvar>
-      <classvar>classOne</classvar>
-      <classvar>classTwo</classvar>
-      <classvar>classThree</classvar>
-      <poolvar>poolOne</poolvar>
-      <poolvar>poolTwo</poolvar>
-      <poolvar>poolThree</poolvar>
-  </request>'
+            ^
+'<request id="80"
+  type="CompileClass"
+  superspace="Smalltalk"
+  super="Object"
+  namespace="ShampooSamples"
+  class="SampleClassC">
+    <instvar>one</instvar>
+    <instvar>two</instvar>
+    <instvar>three</instvar>
+    <classvar>classOne</classvar>
+    <classvar>classTwo</classvar>
+    <classvar>classThree</classvar>
+    <poolvar>poolOne</poolvar>
+    <poolvar>poolTwo</poolvar>
+    <poolvar>poolThree</poolvar>
+</request>'
         ]
     ]
 
@@ -468,7 +487,13 @@ for tests"
         ]
 
         classSideSample [
-            ^'<request id="80" type="CompileClass" namespace="ShampooSamples" class="SampleClassSide" side="class">
+            ^
+'<request
+  id="80"
+  type="CompileClass"
+  namespace="ShampooSamples"
+  class="SampleClassSide"
+  side="class">
       <instvar>classOne</instvar>
       <instvar>classTwo</instvar>
       <instvar>classThree</instvar>
@@ -487,7 +512,8 @@ for tests"
 
         testCompiledMethod [
             | value |
-            value := ShampooSamples.SampleClassD new sampleCompiledMethod: 11.
+            value := ShampooSamples.SampleClassD new
+                     sampleCompiledMethod: 11.
             self should: [value = 42]
         ]
 
@@ -582,19 +608,23 @@ anotherMethodWithCategory [
         ]
 
         doItSample [
-            ^'<request id="80" type="DoIt">ShampooSamples at: #someUniqueKeyForDoIt put: 42</request>'
+            ^
+'<request id="80" type="DoIt">
+  ShampooSamples at: #someUniqueKeyForDoIt put: 42
+</request>'
         ]
 
         localsDoItSample [
-            ^'<request id="80" type="DoIt">
-            | c d |
-            c := OrderedCollection new.
-            c add: 1; add: 2; add: 3.
-            d := (c collect: [:e | e squared])
-                inject: String new
-                into: [:a :e | a, e asString].
-            ShampooSamples at: #someUniqueKeyForLocals put: d
-            </request>'
+            ^
+'<request id="80" type="DoIt">
+| c d |
+c := OrderedCollection new.
+c add: 1; add: 2; add: 3.
+d := (c collect: [:e | e squared])
+  inject: String new
+  into: [:a :e | a, e asString].
+ShampooSamples at: #someUniqueKeyForLocals put: d
+</request>'
         ]
     ]
 
@@ -894,11 +924,15 @@ anotherMethodWithCategory [
         ]
 
         removeFooSample [
-            ^'<request id="129" type="RemoveClass" namespace="Smalltalk" class="ShampooFooClass" />'
+            ^
+'<request id="129" type="RemoveClass"
+namespace="Smalltalk" class="ShampooFooClass" />'
         ]
 
         removeBarSample [
-            ^'<request id="129" type="RemoveClass" namespace="Smalltalk" class="ShampooBarClass" />'
+            ^
+'<request id="129" type="RemoveClass"
+namespace="Smalltalk" class="ShampooBarClass" />'
         ]
     ]
 
@@ -923,11 +957,17 @@ anotherMethodWithCategory [
         ]
 
         removeFooSample [
-            ^'<request id="33" type="RemoveMethod" namespace="ShampooSamples" class="SampleClassF" side="instance" method="foo" />'
+            ^
+'<request id="33" type="RemoveMethod"
+namespace="ShampooSamples" class="SampleClassF" 
+side="instance" method="foo" />'
         ]
     
         removeBarSample  [
-            ^'<request id="33" type="RemoveMethod" namespace="ShampooSamples" class="SampleClassF" side="class" method="bar" />'
+            ^
+'<request id="33" type="RemoveMethod"
+namespace="ShampooSamples" class="SampleClassF"
+side="class" method="bar" />'
         ]
     ]
 
