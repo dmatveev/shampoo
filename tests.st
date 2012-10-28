@@ -68,6 +68,22 @@ Namespace current: Smalltalk [
             <category: 'Shampoo-Tests'>
         ]
 
+        Object subclass: SampleClassG [
+            <category: 'Shampoo-Tests'>
+
+            foo [
+                <category: 'to be renamed'>
+            ]
+
+            bar [
+                <category: 'to be renamed'>
+            ]
+
+            baz [
+                <category: 'to be renamed'>
+            ]
+        ]
+
         Object subclass: SampleClassSide [
             <category: 'Shampoo-Tests'>
         ]
@@ -984,6 +1000,39 @@ anotherMethodWithCategory [
   class="SampleClassD"
   side="instance"
   category="to be removed"
+/>'
+        ]
+    ]
+
+    ShampooTestCase subclass: RenameCategoryTest [
+        | rq |
+
+        setUp [
+            rq := self requestFrom: self renameCatSample.
+            
+            SampleClassG methodDictionary values do:
+            [:each | each descriptor category: 'to be renamed'].
+        ]
+
+        testCategoryRename [
+            | resp |
+            resp := rq execute.
+            self should: [resp success].
+
+            SampleClassG methodDictionary values do:
+            [:each | self should: [each descriptor category = 'finally renamed']]
+        ]
+
+        renameCatSample [
+            ^
+'<request
+  id="133"
+  type="RenameCategory"
+  namespace="ShampooSamples"
+  class="SampleClassG"
+  side="instance"
+  from="to be renamed"
+  to="finally renamed"
 />'
         ]
     ]

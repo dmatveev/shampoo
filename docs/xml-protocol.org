@@ -18,6 +18,7 @@
 |             |                | Added "RemoveClass" and "RemoveMethod" messages                     |
 | 25 Oct 2012 | Dmitry Matveev | More on categories (changes in "CompileMethod" request, added       |
 |             |                | "ChangeCategory" and "RemoveCategory" requests                      |
+| 28 Oct 2012 | Dmitry Matveev | Added "RenameCategory" request                                      |
 
 * Overview
 
@@ -348,6 +349,28 @@ Change the category of the selected method.
     side="instance"
     category="category"
     method="selector"
+  />
+#+END_EXAMPLE
+
+*** Response
+See *OperationalResponse*
+
+** RenameCategory
+
+*** Description
+Rename a category in the class.
+
+*** Syntax
+
+#+BEGIN_EXAMPLE
+  <request
+    id="133"
+    type="RenameCategory"
+    namespace="SomeNamespace"
+    class="SomeClass"
+    side="instance"
+    from="oldCategoryName"
+    to="newCategoryName"
   />
 #+END_EXAMPLE
 
