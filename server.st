@@ -1,6 +1,6 @@
 Namespace current: Shampoo [
 
-    Exception subclass: ClientDisconnected [
+    Error subclass: ClientDisconnected [
         <category: 'Shampoo-Server'>
         <comment: 'I am just an exception. My instances point out that a client
 has disconnected from the server.'>
@@ -21,6 +21,11 @@ text to the standard output, as the original Transcript does'>
         servers := Set new.
         serversMutex := Semaphore forMutualExclusion.
         oldAssoc := nil.
+
+        ShampooTranscript class >> initialize [
+            <category: 'class initialization'>
+            self install
+        ]
 
         ShampooTranscript class >> message: aString [
             <category: 'transcript'>
@@ -128,8 +133,8 @@ prove his identity, I will switch the session to the AutiorizedState.'>
 
     ConnectionState subclass: AuthorizedState [
         <category: 'Shampoo-Server'>
-        <comment: 'My instances represent an authorized state of a user session.
-This state is also can be called "active". The most of Shampoo requests are
+        <comment: 'My instances represent authorized states of a user session.
+Such state is also can be called "active". The most of Shampoo requests are
 processed in this state.'>
 
         process: aRequest [
@@ -143,6 +148,30 @@ processed in this state.'>
         ]
     ]
 
+    Object subclass: ProcessObject [
+        <category: 'Shampoo-Server'>
+        <comment: 'My instances represent objects bound to processes.
+Such object do live inside its process and does the most of its operations
+in the process context.'>
+
+        | process |
+
+        proc: aProcess [
+            <category: 'accessors'>
+            process := aProcess
+        ]
+
+        suspend [
+            <category: 'suspend/resume'>
+            process ifNotNil: [process suspend]
+        ]
+
+        resume [
+            <category: 'suspend/resume'>
+            process ifNotNil: [process resume]
+        ]
+    ]
+
     Object subclass: ClientConnection [
         <category: 'Shampoo-Server'>
         <comment: 'My instances represent a client connection. A client connection
@@ -152,7 +181,9 @@ is actually a finite state machine, see ConnectionState class and its subclasses
 
         ClientConnection class >> on: aSocket onDisconnect: aBlock parent: aServer [
             <category: 'instance creation'>
-            ^self new on: aSocket onDisconnect: aBlock parent: aServer
+            ^aSocket
+               ifNil: [nil]
+               ifNotNil: [self new on: aSocket onDisconnect: aBlock parent: aServer]
         ]
         
         on: aSocket onDisconnect: aBlock parent: aServer [
@@ -170,7 +201,8 @@ is actually a finite state machine, see ConnectionState class and its subclasses
             [sock isPeerAlive] whileTrue:
                 [[self fetchMessages do: [:m | self process: m]]
                   on: ClientDisconnected
-                  do: [:e | ^self signalDisconnected]]
+                  do: [:e | ^self signalDisconnected]].
+            self signalDisconnected
         ]
 
         fetchMessages [
@@ -181,8 +213,7 @@ is actually a finite state machine, see ConnectionState class and its subclasses
 
         signalDisconnected [
             <category: 'private'>
-            disconnectedHandler ifNotNil:
-            [:handler | handler value: self]
+            disconnectedHandler ifNotNil: [:handler | handler value: self]
         ]
 
         process: anXMLRequest [
@@ -193,7 +224,7 @@ is actually a finite state machine, see ConnectionState class and its subclasses
                       'Shampoo: failed to process request ', anXMLRequest].
             r := Request from: xml.
             [self send: (self state process: r)]
-                 on: FatalError do: [:e | self drop]
+                on: FatalError do: [:e | self drop]
         ]
 
         state: aClientConnectionState [
@@ -242,7 +273,7 @@ is actually a finite state machine, see ConnectionState class and its subclasses
         ]
     ]
 
-    Object subclass: ShampooServer [
+    ProcessObject subclass: ShampooServer [
         <category: 'Shampoo-Server'>
         <comment: 'I am the heart of the Shampoo system. My instances manage
 connections and... hmm, looks like thats all.'>
@@ -264,7 +295,6 @@ connections and... hmm, looks like thats all.'>
                 on: server accept
                 onDisconnect: [:cl | self handleDisconnected: cl]
                 parent: self.
-            clientsMutex critical: [self clients add: client].
             ^client
         ]
 
@@ -286,10 +316,14 @@ connections and... hmm, looks like thats all.'>
             creds := aCreds.
 
             [server isOpen] whileTrue:
-                [[server waitForConnection]
+                [| conn |
+                 [server waitForConnection]
                  ifError: [^self inform:
                            'Shampoo: failed to listen for incoming connections'].
-                 [self acceptedClient go] fork]
+                 conn := self acceptedClient.
+                 conn ifNotNil:
+                     [clientsMutex critical: [self clients add: conn].
+                      [conn go] fork]]
         ]
 
         echo: aString [
@@ -315,23 +349,58 @@ connections and... hmm, looks like thats all.'>
         ShampooServer class >> startOn: aPort creds: aCreds [
             <category: 'instance creation'>
             serversMutex critical:
-                [(servers includesKey: aPort) ifFalse:
-                    [| srv |
-                     srv := self new.
-                     servers at: aPort put: srv.
-                     ShampooTranscript add: srv.
-                     [srv startOn: aPort creds: aCreds] fork]]
+            [(servers includesKey: aPort) ifFalse:
+                 [| srv |
+                  srv := self new.
+                  servers at: aPort put: srv.
+                  ShampooTranscript add: srv.
+                  srv proc: [srv startOn: aPort creds: aCreds] fork]]
         ]
-   
-        close [
+
+        ShampooServer class >> update: aspect [
+            <category: 'change and update'>
+            aspect == #aboutToSnapshot    ifTrue: [^self broadcast: #suspend ].
+            aspect == #finishedSnapshot   ifTrue: [^self broadcast: #resume  ].
+            aspect == #returnFromSnapshot ifTrue: [^self broadcast: #restart ].
+        ]
+
+        ShampooServer class >> initialize [
+            <category: 'class initialization'>
+            ObjectMemory addDependent: self
+        ]
+
+        ShampooServer class >> broadcast: aMessage [
             <category: 'private'>
-            [server close] ifError: [].
+            serversMutex critical:
+            [servers values do: [:srv | srv perform: aMessage]]
+        ]
+
+        suspend [
+            <category: 'private'>
+            self closeConnections.
+            super suspend.
+        ]
+
+        restart [
+            <category: 'private'>
+            self close.
+            ShampooTranscript add: self.
+            self proc: [self startOn: server port creds: creds] fork.
+        ]
+
+        closeConnections [
+            <category: 'private'>
             clientsMutex critical:
             [self clients copy do: [:cl | cl close]].
             "And that's all. Every client connection
              will be removed from the set in the
              ShampooServer>>handleDisconnected:."
-
+        ]
+   
+        close [
+            <category: 'private'>
+            [server close] ifError: [].
+            self closeConnections.
             ShampooTranscript remove: self
         ]
     
@@ -344,5 +413,6 @@ connections and... hmm, looks like thats all.'>
 ]
 
 Eval [
-    Shampoo.ShampooTranscript install.
+    Shampoo.ShampooTranscript initialize.
+    Shampoo.ShampooServer initialize.
 ]
