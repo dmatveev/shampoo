@@ -220,8 +220,9 @@ is actually a finite state machine, see ConnectionState class and its subclasses
             <category: 'fsm'>
             | r xml |
             [xml := ShampooXML.ShNode from: anXMLRequest]
-            ifError: [^server inform:
-                      'Shampoo: failed to process request ', anXMLRequest].
+            ifError:
+            [^server inform:
+             'Shampoo: failed to parse ', anXMLRequest printString].
             r := Request from: xml.
             [self send: (self state process: r)]
             on: FatalError do: [:e | self close]
