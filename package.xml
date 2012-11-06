@@ -8,6 +8,23 @@
 
   <namespace>Shampoo</namespace>
 
+  <start>
+    %1 isNil ifTrue:
+    [^Shampoo.ShampooServer startOn: 9090 login: 'user' pass: '1234'].
+
+    %1 =~ '^([A-z0-9]+)\:([A-z0-9]+):([0-9]+)' ifMatched:
+    [:m | ^Shampoo.ShampooServer
+          startOn: (m at: 3) asNumber login: (m at: 1) pass: (m at: 2)].
+  </start>
+
+  <stop>
+    %1 isNil ifTrue:
+    [^Shampoo.ShampooServer closeAll].
+    
+    %1 ~ '^([0-9]+)' ifTrue:
+    [^Shampoo.ShampooServer closeOn: %1 asNumber]
+  </stop>
+
   <filein>xml.st</filein>
   <filein>hacks.st</filein>
   <filein>auth.st</filein>
