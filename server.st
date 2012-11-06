@@ -315,6 +315,8 @@ connections and... hmm, looks like thats all.'>
             server := TCP.ServerSocket port: aPort.
             creds := aCreds.
 
+            ShampooTranscript add: self.
+
             [server isOpen] whileTrue:
                 [| conn |
                  [server waitForConnection]
@@ -353,7 +355,6 @@ connections and... hmm, looks like thats all.'>
                  [| srv |
                   srv := self new.
                   servers at: aPort put: srv.
-                  ShampooTranscript add: srv.
                   srv proc: [srv startOn: aPort creds: aCreds] fork]]
         ]
 
@@ -384,7 +385,6 @@ connections and... hmm, looks like thats all.'>
         restart [
             <category: 'private'>
             self close.
-            ShampooTranscript add: self.
             self proc: [self startOn: server port creds: creds] fork.
         ]
 
