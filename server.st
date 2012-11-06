@@ -224,7 +224,7 @@ is actually a finite state machine, see ConnectionState class and its subclasses
                       'Shampoo: failed to process request ', anXMLRequest].
             r := Request from: xml.
             [self send: (self state process: r)]
-                on: FatalError do: [:e | self drop]
+            on: FatalError do: [:e | self close]
         ]
 
         state: aClientConnectionState [
@@ -258,13 +258,6 @@ is actually a finite state machine, see ConnectionState class and its subclasses
         close [
             <category: 'networking'>
             sock close
-        ]
-
-        drop [
-            <category: 'networking'>
-            self
-                close;
-                signalDisconnected
         ]
 
         server [
