@@ -339,6 +339,13 @@ connections and... hmm, looks like thats all.'>
             ^self startOn: aPort creds: (AuthInfo login: aLogin pass: aPass)
         ]
 
+        ShampooServer class >> closeAll [
+            <category: 'networking'>
+            serversMutex critical:
+            [servers values do: [:each | each close].
+             servers empty]
+        ]
+
         ShampooServer class >> closeOn: aPort [
             <category: 'networking'>
             serversMutex critical:

@@ -18,6 +18,9 @@
   </start>
 
   <stop>
+    %1 isNil ifTrue:
+    [^Shampoo.ShampooServer closeAll].
+    
     %1 ~ '^([0-9]+)' ifTrue:
     [^Shampoo.ShampooServer closeOn: %1 asNumber]
   </stop>
