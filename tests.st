@@ -1076,4 +1076,50 @@ side="class" method="bar" />'
 />'
         ]
     ]
+
+    ShampooTestCase subclass: MethodSourcePrettifierTest [
+        | ms |
+
+        setUp [
+            ms := MethodSource from: self methodSample
+        ]
+
+        testSelector [
+            self should:
+            [ms selectorWithArguments = 'aMessageWith: anArgument'].
+        ]
+
+        testCompacting [
+            ms compact.
+            self should: [ms body size = 4]
+        ]
+
+        testIndentSize [
+            ms compact.
+            self should: [ms methodIndent = 2]
+        ]
+
+        testStrip [
+            ms compact; stripIndent.
+            self should: [ms methodIndent = 0]
+        ]
+
+        testIndenting [
+            ms compact; stripIndent; indentWith: '    '.
+            self should: [ms methodIndent = 4].
+        ]
+
+        methodSample [
+            ^
+'aMessageWith: anArgument
+      [
+  | one two |
+  one := 1.
+  two := 2.
+  ^one + two
+
+   ]
+'
+        ]
+    ]
 ]
