@@ -317,7 +317,7 @@ concrete class'>
         method: aNameString methodSource: aSourceString [
             <category: 'private'>
             methodName := aNameString.
-            methodSource := aSourceString
+            methodSource := PrettyPrinter prettifyMethod: aSourceString
         ]
 
         type [

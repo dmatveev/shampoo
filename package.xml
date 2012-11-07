@@ -32,6 +32,7 @@
   <filein>responses.st</filein>
   <filein>server.st</filein>
   <filein>parser.st</filein>
+  <filein>pretty.st</filein>
 
   <file>xml.st</file>
   <file>hacks.st</file>
@@ -40,6 +41,7 @@
   <file>responses.st</file>
   <file>server.st</file>
   <file>parser.st</file>
+  <file>pretty.st</file>
 
   <test>
     <sunit>Shampoo.LoginTest</sunit>
