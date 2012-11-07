@@ -53,6 +53,7 @@ Namespace current: Shampoo [
             r := ReadStream on: body.
             r forwardWhile: [:line | line trimSeparators isEmpty].
             body := body drop: r position.
+            body isEmpty ifTrue: [^self].
 
             "Remove newline characters from the beginning of the
              first line"
