@@ -37,6 +37,7 @@ provides a set of commands that allow to...
 Shampoo is functioning in a request/response scheme. Client sends a request to
 the server and server replies with a response. There are some messages that can
 be sent by a server outside of this scheme, i.e. without an appropriate request.
+Also, a single request can cause multiple responses.
 
 * Authentication
 
@@ -224,13 +225,13 @@ concrete class.
   />
 #+END_EXAMPLE
 
-  SIDE option may have two possible values:
-  - "instance" - enumerate categories for the instance-side methods of a class;
-  - "class"    - the same for the class side.
+SIDE option may have two possible values:
+- "instance" - enumerate categories for the instance-side methods of a class;
+- "class"    - the same for the class side.
 
-  CATEGORY option value should exist in the list of categories obtained from
-  Categories message. CATEGORY also may be '*', in this case server should return
-  all the available methods.
+CATEGORY option value should exist in the list of categories obtained from
+Categories message. CATEGORY also may be '*', in this case server should return
+all the available methods.
 
 *** Response
 See *Methods*
@@ -468,6 +469,52 @@ Ask server to evaluate an expression and to send the result back to us.
 *** Response
 See *PrintIt*
 
+** FileOut
+
+*** Description
+Ask server to send a complete source for a class, classes in a category, or classes in a namespace.
+
+*** Syntax
+
+File out a particular class:
+
+#+BEGIN_EXAMPLE
+  <request id="123" type="FileOut"
+    namespace="SomeNamespace"
+    class="SomeClass"
+  />
+#+END_EXAMPLE
+
+File out all classes of a particular category from a namespace:
+
+#+BEGIN_EXAMPLE
+  <request id="23" type="FileOut"
+    namespace="SomeNamespace"
+    category="SomeCategory"
+    splitby="category"
+  />
+#+END_EXAMPLE
+
+File out all classes from a namespace:
+
+#+BEGIN_EXAMPLE
+  <request id="29" type="FileOut"
+    namespace="SomeNamespace"
+    splitby="category"
+  />
+#+END_EXAMPLE
+
+If request have both CLASS and CATEGORY options, a class fileout case will be performed.
+
+SPLITBY option determines how the fileout will be splitted. It can have two possible values:
+- category -- group sources by class categories, send a separate source file for each category.
+- class -- send a separate source file for each exported class.
+
+SPLITBY option has no effect for a CLASS option case.
+
+*** Response
+See *FileOut*
+
 * Responses
 
 ** OperationalResponse
@@ -612,7 +659,6 @@ usually it is an image/system version.
 ** Echo
 
 *** Description
-
 This message contains an output that is being printed on the Transcript. These
 notifications are sent to all the connected clients, not only to the one that
 has initiated the printing.
@@ -628,7 +674,6 @@ has initiated the printing.
 ** PrintIt
 
 *** Description
-
 This message contains an output of an expression evaluation.
 
 *** Syntax
@@ -636,5 +681,43 @@ This message contains an output of an expression evaluation.
 #+BEGIN_EXAMPLE
   <response id="44" type="PrintIt">
     Some text here
+  </response>
+#+END_EXAMPLE
+
+** FileOut
+
+*** Description
+FileOut message contains a source code exported from the system. A single message
+may contain multiple classes inside, depending on the parameters of the request.
+
+The response's source code must be ready for saving to disk as is, i.e. it
+should not require any client post-processing.
+
+A single FileOut request can produce multiple FileOut responses with the same id.
+The last FileOut response it the sequence will contain a special mark.
+
+*** Syntax
+
+Sample response for a request with SPLITBY option "category":
+ 
+#+BEGIN_EXAMPLE
+  <response id="123" type="FileOut" category="SomeCategory">
+     (Source code of all classes in a category)
+  </response>
+#+END_EXAMPLE
+
+Sample response for a request with SPLITBY option "class":
+
+#+BEGIN_EXAMPLE
+  <response id="99" type="FileOut" class="SomeClass">
+     (Source code for a particular class)
+  </response>
+#+END_EXAMPLE
+
+Sample last response in a sequence of responses:
+
+#+BEGIN_EXAMPLE
+  <response id="99" type="FileOut" class="SomeClass" last="true">
+     (Source code for a particular class)
   </response>
 #+END_EXAMPLE

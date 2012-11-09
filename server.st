@@ -224,7 +224,7 @@ is actually a finite state machine, see ConnectionState class and its subclasses
             [^server inform:
              'Shampoo: failed to parse ', anXMLRequest printString].
             r := Request from: xml.
-            [self send: (self state process: r)]
+            [(self state process: r) do: [:resp | self send: resp]]
             on: FatalError do: [:e | self close]
         ]
 

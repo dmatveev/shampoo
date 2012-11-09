@@ -25,6 +25,15 @@ serialize themselves into a network-transfer-friendly format.'>
             ^self shouldNotImplement
         ]
 
+        do: aBlock [
+            "Evaluate a one-argument block, pass self to it.
+             This method is actually a kludge and it will be probably
+             removed later"
+            
+            <category: 'collection'>
+            ^aBlock value: self
+        ]
+
         asXML [
             <category: 'marshalling'>
             ^(ShampooXML.ShNode tagname: 'response')
@@ -117,7 +126,7 @@ an operation. An operation is usually a result of a request execution.'>
         ]
     ]
 
-    Object subclass: AggregatedResponseDecorator [
+    Object subclass: CollectionResponseDecorator [
         <category: 'Shampoo-Responses'>
         <comment: 'I am a decorator, a Smalltalk alternative to the multiple
 inheritance. My instances are used to add some additional state and behavior
@@ -128,7 +137,7 @@ here.'>
 
         | items wrapped |
 
-        AggregatedResponseDecorator class >> on: aWrappedObject [
+        CollectionResponseDecorator class >> on: aWrappedObject [
             <category: 'instance creation'>
             ^self new on: aWrappedObject
         ]
@@ -162,6 +171,15 @@ here.'>
             ^root
         ]
 
+        do: aBlock [
+            "CollectionResponseDecorator usually wraps Response objects.
+             Response objects partly understand the collection protocol,
+             especially a #do: message. This wrapper does not proxy this
+             message to the underlying object."
+            <category: 'decorating'>
+            ^aBlock value: self
+        ]
+
         doesNotUnderstand: aMessage [
             <category: 'decorating'>
             "Proxy an unknown message to an underlying object"
@@ -176,7 +194,7 @@ here.'>
 
         NamespacesResponse class >> id: anInteger names: anArray [
             <category: 'instance creation'>
-            ^(AggregatedResponseDecorator on: (self id: anInteger))
+            ^(CollectionResponseDecorator on: (self id: anInteger))
                 itemsAt: 'namespace' put: anArray;
                 yourself
         ]
@@ -194,7 +212,7 @@ namespace.'>
 
         ClassesResponse class >> id: anInteger names: anArray [
             <category: 'instance creation'>
-            ^(AggregatedResponseDecorator on: (self id: anInteger))
+            ^(CollectionResponseDecorator on: (self id: anInteger))
                 itemsAt: 'class' put: anArray;
                 yourself
         ]
@@ -252,7 +270,7 @@ class in the concrete namespace. See more in my subclasses.'>
             <category: 'instance creation'>
             | obj |
             obj := self id: anInteger class: aClass attrs: {'superclass' -> aSuperClass}.
-            ^(AggregatedResponseDecorator on: obj)
+            ^(CollectionResponseDecorator on: obj)
                 itemsAt: 'instvar'  put: anInstVars;
                 itemsAt: 'classvar' put: aClassVars;
                 itemsAt: 'poolvar'  put: aPoolDicts;
@@ -271,7 +289,7 @@ class in the concrete namespace. See more in my subclasses.'>
 
         MethodCategoriesResponse class >> id: anInteger class: aClass categories: anArray [
             <category: 'instance creation'>
-            ^(AggregatedResponseDecorator on: (self id: anInteger class: aClass))
+            ^(CollectionResponseDecorator on: (self id: anInteger class: aClass))
                 itemsAt: 'category' put: anArray;
                 yourself
         ]
@@ -289,7 +307,7 @@ of the concrete class'>
         
         MethodsResponse class >> id: anInteger class: aClass methods: anArray [
             <category: 'instance creation'>
-            ^(AggregatedResponseDecorator on: (self id: anInteger class: aClass))
+            ^(CollectionResponseDecorator on: (self id: anInteger class: aClass))
                 itemsAt: 'method' put: anArray;
                 yourself
         ]
