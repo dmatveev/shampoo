@@ -87,6 +87,9 @@ Namespace current: Smalltalk [
         Object subclass: SampleClassSide [
             <category: 'Shampoo-Tests'>
         ]
+
+        Object subclass: SampleClassWithoutCategory [
+        ]
     ]
 ]
 
@@ -145,6 +148,10 @@ Namespace current: Shampoo [
         defaultLogPolicyClass [
             <category: 'logging'>
             ^TestVerboseLog
+        ]
+
+        execute: aSelector [
+            ^(self requestFrom: (self perform: aSelector)) execute
         ]
 
         requestFrom: aString [
@@ -505,9 +512,9 @@ method="doSomethingElse:withArg:"/>'
         <category: 'Shampoo-Tests'>
 
         setUp [
-            (self requestFrom: self compileMethodSample) execute.
-            (self requestFrom: self compileMethodCatSample) execute.
-            (self requestFrom: self compileMethodCatOvwrSample) execute.
+            self execute: #compileMethodSample.
+            self execute: #compileMethodCatSample.
+            self execute: #compileMethodCatOvwrSample.
         ]
 
         testCompiledMethod [
@@ -1019,7 +1026,7 @@ side="class" method="bar" />'
                               methodDictionary at: each.
                     method descriptor category: 'to be removed'].
 
-            (self requestFrom: self removeCatSample) execute.
+            self execute: #removeCatSample
         ]
 
         testRemoval [
@@ -1118,8 +1125,107 @@ side="class" method="bar" />'
   two := 2.
   ^one + two
 
-   ]
-'
+   ]'
+        ]
+    ]
+
+    ShampooTestCase subclass: ShampooFileOutTestCase [
+        | rs |
+        
+        ShampooFileOutTestCase class >> isAbstract [
+            ^true
+        ]
+
+        responses: aCollectionOfResponses [
+            rs := aCollectionOfResponses
+        ]
+
+        responses [
+            ^rs
+        ]
+
+        testLastMark [
+            self should: [rs last isLast]
+        ]
+
+        testAllButLastMark [
+            self shouldnt:
+            [(rs allButLast collect: [:each | each isLast]) or]
+        ]
+
+        testSameId [
+            rs allButFirst do:
+            [:each | self should: [each id = rs first id]]
+        ]
+    ]
+
+    ShampooFileOutTestCase subclass: ShampooFileOutClassTest [
+
+        ShampooFileOutClassTest class >> isAbstract [
+            ^false
+        ]
+
+        setUp [
+            self responses: (self execute: #fileOutClassSample)
+        ]
+
+        testResponseCount [
+            self should: [self responses size = 1]
+        ]
+
+        fileOutClassSample [
+            ^
+'<request id="123" type="FileOut"
+    namespace="ShampooSamples"
+    class="SampleClassA"
+/>'
+        ]
+    ]
+
+    ShampooFileOutTestCase subclass: ShampooFileOutClassCategoryTest [
+
+        ShampooFileOutClassCategoryTest class >> isAbstract [
+            ^false
+        ]
+
+        setUp [
+            self responses: (self execute: #fileOutClassCategorySample)
+        ]
+
+        testResponseCount [
+            self should: [self responses size = 7]
+        ]
+
+        fileOutClassCategorySample [
+            ^
+'<request id="122" type="FileOut"
+    namespace="ShampooSamples"
+    category="Shampoo-Tests"
+    splitby="class"
+/>'
+        ]
+    ]
+
+    ShampooFileOutTestCase subclass: ShampooFileOutNamespaceTest [
+        
+        ShampooFileOutNamespaceTest class >> isAbstract [
+            ^false
+        ]
+
+        setUp [
+            self responses: (self execute: #fileOutNamespaceSample)
+        ]
+
+        testResponseCount [
+            self should: [self responses size = 8]
+        ]
+
+        fileOutNamespaceSample [
+            ^
+'<request id="234" type="FileOut"
+    namespace="ShampooSamples"
+    splitby="class"
+/>'
         ]
     ]
 ]

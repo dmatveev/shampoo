@@ -13,6 +13,16 @@ Collection extend [
          This kludge works as an abstraction over it all"
         ^(self collect: [:each | each asString]) asArray
     ]
+
+    or [
+        <category: '*shampoo-hacks'>
+        ^self fold: [:a :b | a | b]
+    ]
+
+    and [
+        <category: '*shampoo-hacks'>
+        ^self fold: [:a :b | a & b]
+    ]
 ]
 
 BlockClosure extend [

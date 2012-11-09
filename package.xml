@@ -66,6 +66,9 @@
     <sunit>Shampoo.ShampooRemoveCategoryTest</sunit>
     <sunit>Shampoo.RenameCategoryTest</sunit>
     <sunit>Shampoo.MethodSourcePrettifierTest</sunit>
+    <sunit>Shampoo.ShampooFileOutClassTest</sunit>
+    <sunit>Shampoo.ShampooFileOutClassCategoryTest</sunit>
+    <sunit>Shampoo.ShampooFileOutNamespaceTest</sunit>
     <filein>tests.st</filein>
   </test>
 </package>
