@@ -16,11 +16,13 @@ Collection extend [
 
     or [
         <category: '*shampoo-hacks'>
+        self isEmpty ifTrue: [^false].
         ^self fold: [:a :b | a | b]
     ]
 
     and [
         <category: '*shampoo-hacks'>
+        self isEmpty ifTrue: [^true].
         ^self fold: [:a :b | a & b]
     ]
 ]

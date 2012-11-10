@@ -628,4 +628,249 @@ The methods of the removed category are marked as uncategorized.'>
                         ifTrue: [method descriptor category: to]]]
         ]
     ]
+
+    Request subclass: FileOutRequest [
+        <category: 'Shampoo-Requests'>
+        <comment: 'My instances are just wrappers. The actual work is
+done by the FileOut implemention classes, I just select the right one
+depending on the request arguments. Well, yes, I implement the Strategy
+pattern.'>
+
+        | worker |
+
+        FileOutRequest class >> is: aString [
+            <category: 'identification'>
+            ^aString = 'FileOut'
+        ]
+
+        init: anXML [
+            <category: 'private'>
+            worker := self workerFor: anXML
+        ]
+
+        workerFor: anXML [
+            <category: 'strategy'>
+            | attrs |
+            attrs := anXML attrMap.
+            (attrs includesKey: 'class')
+            ifTrue: [^ClassFileOutWorker on: anXML parent: self].
+
+            (attrs includesKey: 'category')
+            ifTrue: [^CategoryFileOutWorker on: anXML parent: self].
+
+            ^NamespaceFileOutWorker on: anXML parent: self
+        ]
+
+        execute [
+            <category: 'execution'>
+            ^worker execute
+        ]
+    ]
+
+    Object subclass: FileOutWorker [
+        <category: 'Shampoo-Requests'>
+
+        | namespace request splitter |
+
+        FileOutWorker class >> on: anXML parent: aRequest [
+            <category: 'instance creation'>
+            ^self new
+                parent: aRequest;
+                init: anXML;
+                yourself
+        ]
+
+        parent: aRequest [
+            <category: 'private'>
+            request := aRequest.
+        ]
+
+        init: anXML [
+            <category: 'private'>
+            | attrs |
+            attrs := anXML attrMap.
+            namespace := attrs at: 'namespace'.
+            splitter  := self splitterFor: anXML.
+        ]
+
+        parent [
+            <category: 'accessors'>
+            ^request
+        ]
+
+        namespace [
+            <category: 'accessors'>
+            ^namespace
+        ]
+
+        splitter [
+            <category: 'accessors'>
+            ^splitter
+        ]
+
+        splitterFor: anXML [
+            <category: 'strategy'>
+            | option |
+            option := anXML attrMap at: 'splitby' ifAbsent: ['class'].
+            option = 'category' ifTrue:
+            [^ByCategoryFileOutSplitter parent: self parent].
+            ^ByClassFileOutSplitter parent: self parent
+        ]
+
+        execute [
+            <category: 'execution'>
+            ^Array new
+        ]
+
+        buildResponses: aCollectionOfClasses [
+            | organized prettified responses |
+            organized := self splitter organize: aCollectionOfClasses.
+
+            prettified := organized collect:
+            [:classes | PrettyPrinter prettifyClasses: classes].
+
+            responses := prettified associations collect:
+            [:assoc | self splitter buildResponseFor: assoc value
+                                    in: assoc key].
+
+            responses last isLast: true.
+            ^responses
+        ]
+    ]
+
+    FileOutWorker subclass: ClassFileOutWorker [
+        <category: 'Shampoo-Requests'>
+
+        | className |
+
+        init: anXML [
+            <category: 'private'>
+            super init: anXML.
+            className := anXML attrMap at: 'class'.
+        ]
+
+        splitterFor: anXML [
+            <category: 'strategy'>
+            ^ByClassFileOutSplitter parent: self parent
+        ]
+
+        execute [
+            <category: 'execution'>
+            | ns class |
+            ns := Smalltalk at: self namespace asSymbol.
+            class := ns at: className asSymbol.
+            ^self buildResponses: (Array with: class)
+        ]
+    ]
+
+    FileOutWorker subclass: NamespaceFileOutWorker [
+        <category: 'Shampoo-Requests'>
+
+        accepts: aClass [
+            <category: 'private'>
+            ^true
+        ]
+
+        execute [
+            <category: 'execution'>
+            | ns cs |
+            ns := Smalltalk at: self namespace asSymbol.
+            cs := OrderedCollection new.
+            ns allClassesDo:
+            [:each | (self accepts: each) ifTrue: [cs add: each]].
+            ^self buildResponses: cs
+        ]
+    ]
+
+    NamespaceFileOutWorker subclass: CategoryFileOutWorker [
+        <category: 'Shampoo-Requests'>
+
+        | catName |
+
+        init: anXML [
+            <category: 'private'>
+            super init: anXML.
+            catName := anXML attrMap at: 'category'.
+        ]
+
+        accepts: aClass [
+            <category: 'private'>
+            ^aClass category = catName
+        ]
+    ]
+
+    Object subclass: FileOutSplitter [
+        | request |
+
+        FileOutSplitter class >> parent: aRequest [
+            <category: 'instance creation'>
+            ^(self new)
+                parent: aRequest;
+                yourself
+        ]
+
+        parent: aRequest [
+            <category: 'private'>
+            request := aRequest
+        ]
+
+        parent [
+            <category: 'accessors'>
+            ^request
+        ]
+
+        organize: aCollectionOfClasses [
+            <category: 'strategy'>
+            ^self subclassResponsibility
+        ]
+
+        buildResponseFor: aSourceCode in: aGroup [
+            <category: 'strategy'>
+            ^self subclassResponsibility
+        ]
+    ]
+
+    FileOutSplitter subclass: ByClassFileOutSplitter [
+        <category: 'Shampoo-Requests'>
+
+        organize: aCollectionOfClasses [
+            <category: 'strategy'>
+            ^Dictionary from:
+             (aCollectionOfClasses collect:
+             [:each | each name asString -> (Array with: each)])
+        ]
+
+        buildResponseFor: aSourceCode in: aGroup [
+            <category: 'strategy'>
+            ^FileOutResponse 
+                id: self parent id
+                class: aGroup
+                source: aSourceCode
+        ]
+    ]
+
+    FileOutSplitter subclass: ByCategoryFileOutSplitter [
+        <category: 'Shampoo-Requests'>
+
+        organize: aCollectionOfClasses [
+            <category: 'strategy'>
+            | dict |
+            dict := Dictionary new.
+            aCollectionOfClasses do:
+            [:class |
+             (dict at: class category ifPresent: [:c | c add: class])
+             isNil ifTrue:
+             [dict at: class category put:
+              (OrderedCollection with: class)]].
+            ^dict
+        ]
+
+        buildResponseFor: aSourceCode in: aGroup [
+            <category: 'strategy'>
+            ^FileOutResponse
+                id: self parent id
+                category: aGroup
+                source: aSourceCode
+        ]
+    ]
 ]

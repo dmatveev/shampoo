@@ -93,8 +93,21 @@ Namespace current: Shampoo [
         ]
     ]
 
+    Object subclass: ClassSource [
+        <category: 'Shampoo-Pretty printing'>
+
+        ClassSource class >> of: aClass [
+            ^self new
+        ]
+
+        sourceString [
+            ^''
+        ]
+    ]
+
     Object subclass: PrettyPrinter [
         <category: 'Shampoo-Pretty printing'>
+
         PrettyPrinter class >> prettifyMethod: aSourceString [
             <category: 'pretty printing'>
             ^(MethodSource from: aSourceString)
@@ -102,6 +115,21 @@ Namespace current: Shampoo [
                 stripIndent;
                 indentWith: '    ';
                 sourceString
+        ]
+
+        PrettyPrinter class >> prettifyClass: aClass [
+            <category: 'pretty printing'>
+            ^(ClassSource of: aClass)
+                sourceString
+        ]
+
+        PrettyPrinter class >> prettifyClasses: aCollectionOfClasses [
+            <category: 'pretty printing'>
+            | prettified |
+            prettified := aCollectionOfClasses collect:
+            [:each | self prettifyClass: each].
+            
+            ^prettified fold: [:first :second | first, second]
         ]
     ]
 ]

@@ -453,4 +453,62 @@ a client for password encryption during the authentication.'>
                 yourself
         ]
     ]
+
+    Response subclass: FileOutResponse [
+        | isLast xml |
+
+        FileOutResponse class >>
+        id: anInteger class: aClassName source: aString [
+            <category: 'instance creation'>
+            ^(self id: anInteger)
+                class: aClassName source: aString;
+                yourself
+        ]
+
+        FileOutResponse class >>
+        id: anInteger category: aCategory source: aString [
+            <category: 'instance creation'>
+            ^(self id: anInteger)
+                category: aCategory source: aString;
+                yourself
+        ]
+
+        class: aClassName source: aString [
+            <category: 'private'>
+            xml := super asXML.
+            xml addAttribute: 'class' value: aClassName;
+                addNode: (ShampooXML.ShText text: aString)
+        ]
+
+        category: aCategory source: aString [
+            <category: 'private'>
+            xml := super asXML.
+            xml addAttribute: 'category' value: aCategory;
+                addNode: (ShampooXML.ShText text: aString)
+        ]
+
+        isLast [
+            <category: 'accessors'>
+            ^isLast ifNil: [isLast := false]
+        ]
+
+        isLast: aBoolean [
+            <category: 'accessors'>
+            isLast := aBoolean
+        ]
+
+        type [
+            <category: 'private'>
+            ^'FileOut'
+        ]
+
+        asXML [
+            <category: 'marshalling'>
+            | r |
+            r := xml copy.
+            self isLast ifTrue:
+            [r addAttribute: 'last' value: 'true'].
+            ^r
+        ]
+    ]
 ]
