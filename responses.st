@@ -126,7 +126,7 @@ an operation. An operation is usually a result of a request execution.'>
         ]
     ]
 
-    Object subclass: CollectionResponseDecorator [
+    Decorator subclass: CollectionResponseDecorator [
         <category: 'Shampoo-Responses'>
         <comment: 'I am a decorator, a Smalltalk alternative to the multiple
 inheritance. My instances are used to add some additional state and behavior
@@ -135,17 +135,7 @@ be added somewhere in the root of the class (sub)hierarchy, some classes in
 the hierarchy should behave like me, and some should not. That''s why I am
 here.'>
 
-        | items wrapped |
-
-        CollectionResponseDecorator class >> on: aWrappedObject [
-            <category: 'instance creation'>
-            ^self new on: aWrappedObject
-        ]
-
-        on: aWrappedObject [
-            <category: 'private'>
-            wrapped := aWrappedObject
-        ]
+        | items |
 
         items [
             <category: 'accessors'>
@@ -160,7 +150,7 @@ here.'>
         asXML [
             <category: 'marshalling'>
             | root |
-            root := wrapped asXML.
+            root := self underlyingObject asXML.
 
             self items keysAndValuesDo:
                 [:key :values | values do: [:each |
@@ -178,13 +168,6 @@ here.'>
              message to the underlying object."
             <category: 'decorating'>
             ^aBlock value: self
-        ]
-
-        doesNotUnderstand: aMessage [
-            <category: 'decorating'>
-            "Proxy an unknown message to an underlying object"
-            ^wrapped perform: aMessage selector
-                     withArguments: aMessage arguments
         ]
     ]
 

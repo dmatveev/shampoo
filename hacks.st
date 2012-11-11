@@ -1,7 +1,21 @@
+Object extend [
+    namespaceChain [
+        <category: '*shampoo-hacks'>
+        | ns chain |
+        ns := self environment.
+        chain := OrderedCollection new.
+        [ns ~= Smalltalk] whileTrue:
+        [chain add: ns. ns := ns environment].
+        ^chain reverse
+    ]
+]
+
 Collection extend [
     elementsString [
         <category: '*shampoo-hacks'>
-        ^self inject: '' into: [:acc :each | acc, each asString, ' ']
+        ^self isEmpty
+            ifTrue: ['']
+            ifFalse: [self fold: [:a :b | a, ' ', b]]
     ]
 
     asStringArray [
@@ -102,18 +116,40 @@ String extend [
     ]
 ]
 
-WriteStream extend [
-    putStrLn: aString [
-        <category: '*shampoo-hacks'>
-        self nextPutAll: aString; nl
-    ]
-]
-
 Namespace current: Sockets [
     StreamSocket extend [
         crlf [
             <category: '*shampoo-hacks'>
             self nextPutAll: String crlf
         ]
+    ]
+]
+
+Object subclass: Decorator [
+    | underlyingObject |
+
+    Decorator class >> on: anObject [
+        <category: 'instance creation'>
+        ^self new
+            underlyingObject: anObject;
+            yourself
+    ]
+
+    underlyingObject: anObject [
+        <category: 'accessors'>
+        underlyingObject := anObject
+    ]
+
+    underlyingObject [
+        <category: 'accessors'>
+        ^underlyingObject
+    ]
+
+    doesNotUnderstand: aMessage [
+        <category: 'decorating'>
+        "Proxy an unknown message to an underlying object"
+        ^underlyingObject
+            perform: aMessage selector
+            withArguments: aMessage arguments
     ]
 ]

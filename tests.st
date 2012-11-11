@@ -1217,7 +1217,7 @@ side="class" method="bar" />'
         ]
 
         testResponseCount [
-            self should: [self responses size = 8]
+            self should: [self responses size >= 8]
         ]
 
         fileOutNamespaceSample [

@@ -75,20 +75,25 @@ Namespace current: Shampoo [
         ]
 
         indentWith: aString [
+            <category: 'pretty printing'>
             body := body collect: [:each | aString, each].
+        ]
+
+        printOn: aStream [
+            aStream
+                nextPutAll: selectorWithArguments;
+                space;
+                nextPut: $[;
+                nl.
+            body do: [:line | aStream nextPutAll: line; nl].
+            aStream nextPut: $]; nl.
         ]
 
         sourceString [
             <category: 'pretty printing'>
             | w |
             w := WriteStream on: String new.
-            w
-                nextPutAll: selectorWithArguments;
-                space;
-                nextPut: $[;
-                nl.
-            body do: [:line | w putStrLn: line].
-            w nextPut: $]; nl.
+            self printOn: w.
             ^w contents
         ]
     ]
@@ -96,12 +101,158 @@ Namespace current: Shampoo [
     Object subclass: ClassSource [
         <category: 'Shampoo-Pretty printing'>
 
+        | printedClass namespaces |
+
         ClassSource class >> of: aClass [
+            <category: 'instance creation'>
             ^self new
+                printedClass: aClass;
+                yourself
+        ]
+
+        printedClass: aClass [
+            <category: 'private'>
+            printedClass := aClass.
+            namespaces := printedClass namespaceChain.
+        ]
+
+        enclosingNamespaces: aStream do: aBlock [
+            <category: 'pretty printing'>
+            namespaces do:
+            [:ns | aStream
+                       nextPutAll: 'Namespace current:';
+                       space;
+                       nextPutAll: ns name asString;
+                       space;
+                       nextPut: $[;
+                       space].
+            aStream nl.
+            aBlock value.
+            namespaces size timesRepeat: [aStream nextPut: $]].
+            aStream nl
+        ]
+
+        enclosingClassDefinition: aStream do: aBlock [
+            <category: 'pretty printing'>
+            | superName |
+            superName := printedClass superclass
+                ifNil:    ['nil']
+                ifNotNil: [printedClass superclass name asString].
+            aStream
+                nextPutAll: superName;
+                space;
+                nextPutAll: 'subclass:';
+                space;
+                nextPutAll: printedClass name asString;
+                space;
+                nextPut: $[;
+                nl.
+            aStream increasingIndent: [aBlock value].
+            aStream nextPut: $]; nl
+        ]
+
+        writePragma: aPragmaName value: aString on: aStream [
+            <category: 'pretty printing'>
+            aStream
+                nextPut: $<;
+                nextPutAll: aPragmaName;
+                nextPut: $:;
+                space;
+                nextPut: $';
+                nextPutAll: printedClass category;
+                nextPut: $';
+                nextPut: $>
+        ]
+
+        writeCommentsOn: aStream [
+            <category: 'pretty printing'>
+            printedClass category isNil ifFalse:
+            [self writePragma: 'category'
+                  value: printedClass category
+                  on: aStream.
+             aStream nl].
+            printedClass comment isNil ifFalse:
+            [self writePragma: 'comment'
+                  value: printedClass comment
+                  on: aStream.
+             aStream nl]
+        ]
+
+        writeInstVarsOn: aStream [
+            <category: 'pretty printing'>
+            | instvars |
+            instvars := printedClass instVarNames asStringArray.
+            instvars isEmpty ifFalse:
+            [aStream
+                nextPut: $|;
+                space;
+                nextPutAll: instvars elementsString;
+                space;
+                nextPut: $|;
+                nl]
+        ]
+
+        writeClassVarsOn: aStream [
+            <category: 'pretty printing'>
+            printedClass classVarNames asStringArray do:
+            [:each | aStream
+                         nextPutAll: each;
+                         space;
+                         nextPutAll: ':= nil.';
+                         nl]
+        ]
+
+        writeMethod: aMethod on: aStream [
+            <category: 'pretty printing'>
+            | ms |
+            ms := MethodSource from: aMethod methodSourceString.
+            ms compact; stripIndent.
+            aStream nl.
+            ms printOn: aStream.
+        ]
+
+        writeClassMethod: aMethod on: aStream [
+            <category: 'pretty printing'>
+            | ms |
+            ms := MethodSource from: aMethod methodSourceString.
+            ms compact; stripIndent. 
+            aStream
+                nl;
+                nextPutAll: printedClass name asString;
+                space;
+                nextPutAll: 'class >> '.
+            ms printOn: aStream.
+        ]
+
+        writeMethodsOn: aStream [
+            <category: 'pretty printing'>
+            printedClass methodDictionary ifNotNil:
+            [printedClass methodDictionary values do:
+             [:each | self writeMethod: each on: aStream]]
+        ]
+
+        writeClassMethodsOn: aStream [
+            <category: 'pretty printing'>
+            printedClass class methodDictionary ifNotNil:
+            [printedClass class methodDictionary values do:
+             [:each | self writeClassMethod: each on: aStream]]
         ]
 
         sourceString [
-            ^''
+            <category: 'pretty printing'>
+            | w is ns |
+            w := WriteStream on: String new.
+            is := IndentedStreamDecorator on: w.
+            self enclosingNamespaces: is do:
+            [self enclosingClassDefinition: is do:
+             [self
+                  writeCommentsOn: is;
+                  writeInstVarsOn: is;
+                  writeClassVarsOn: is;
+                  writeClassMethodsOn: is;
+                  writeMethodsOn: is
+             ]].
+            ^is contents.
         ]
     ]
 
@@ -130,6 +281,70 @@ Namespace current: Shampoo [
             [:each | self prettifyClass: each].
             
             ^prettified fold: [:first :second | first, second]
+        ]
+    ]
+
+    Decorator subclass: IndentedStreamDecorator [
+        <category: 'Shampoo-Pretty printing'>
+
+        | state indentLevel levelSpaces |
+
+        prepareIndent [
+            <category: 'indentation fsm'>
+            state := #preparingToIndent
+        ]
+
+        tryIndent [
+            <category: 'indentation fsm'>
+            self state = #preparingToIndent ifTrue: [self indent]
+        ]
+
+        increasingIndent: aBlock [
+            <category: 'indentation'>
+            indentLevel := self indentLevel + 1.
+            [aBlock value] ensure:
+            [indentLevel := self indentLevel - 1]
+        ]
+
+        indent [
+            <category: 'indentation fsm'>
+            self indentLevel * self levelSpaces timesRepeat:
+            [self underlyingObject space].
+            state := #indented
+        ]
+
+        nl [
+            <category: 'stream decorator'>
+            self prepareIndent.
+            self underlyingObject nl
+        ]
+        
+        nextPut: anObject [
+            <category: 'stream decorator'>
+            anObject = Character nl
+                ifTrue:  [self prepareIndent]
+                ifFalse: [self tryIndent].
+            self underlyingObject nextPut: anObject.
+        ]
+
+        nextPutAll: aCollection [
+            <category: 'stream decorator'>
+            aCollection do: [:each | self nextPut: each]
+        ]
+
+        state [
+            <category: 'accessors'>
+            ^state ifNil: [state := #preparingToIndent]
+        ]
+
+        indentLevel [
+            <category: 'accessors'>
+            ^indentLevel ifNil: [indentLevel := 0]
+        ]
+
+        levelSpaces [
+            <category: 'accessors'>
+            ^levelSpaces ifNil: [levelSpaces := 4]
         ]
     ]
 ]
