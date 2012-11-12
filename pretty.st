@@ -158,9 +158,7 @@ Namespace current: Shampoo [
                 nextPutAll: aPragmaName;
                 nextPut: $:;
                 space;
-                nextPut: $';
-                nextPutAll: printedClass category;
-                nextPut: $';
+                nextPutAll: aString printString;
                 nextPut: $>
         ]
 
@@ -184,6 +182,7 @@ Namespace current: Shampoo [
             instvars := printedClass instVarNames asStringArray.
             instvars isEmpty ifFalse:
             [aStream
+                nl;
                 nextPut: $|;
                 space;
                 nextPutAll: instvars elementsString;
@@ -213,14 +212,17 @@ Namespace current: Shampoo [
 
         writeClassMethod: aMethod on: aStream [
             <category: 'pretty printing'>
-            | ms |
+            | ms start |
             ms := MethodSource from: aMethod methodSourceString.
             ms compact; stripIndent. 
+            aStream nl.
+            start := aStream position.
             aStream
-                nl;
                 nextPutAll: printedClass name asString;
                 space;
                 nextPutAll: 'class >> '.
+            aStream position + ms selectorWithArguments size - start
+            >= 67 ifTrue: [aStream nl].
             ms printOn: aStream.
         ]
 
