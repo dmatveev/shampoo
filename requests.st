@@ -667,7 +667,8 @@ pattern.'>
 
         execute [
             <category: 'execution'>
-            ^worker execute
+            [^worker execute] on: Error do:
+            [:err | ^OperationalResponse failure: id with: err]
         ]
     ]
 
@@ -736,6 +737,9 @@ pattern.'>
             responses := prettified associations collect:
             [:assoc | self splitter buildResponseFor: assoc value
                                     in: assoc key].
+
+            responses isEmpty ifTrue:
+            [self error: 'No classes found for fileout'].
 
             responses last isLast: true.
             ^responses

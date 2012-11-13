@@ -84,7 +84,7 @@ an operation. An operation is usually a result of a request execution.'>
 
         OperationalResponse class >> failure: anInteger with: anError [
             <category: 'instance creation'>
-            ^self failure: anInteger text: anError description
+            ^self failure: anInteger text: anError messageText
         ]
 
         OperationalResponse class >> failure: anInteger text: aString [
