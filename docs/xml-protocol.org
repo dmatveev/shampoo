@@ -19,7 +19,9 @@
 | 25 Oct 2012 | Dmitry Matveev | More on categories (changes in "CompileMethod" request, added       |
 |             |                | "ChangeCategory" and "RemoveCategory" requests                      |
 | 28 Oct 2012 | Dmitry Matveev | Added "RenameCategory" request                                      |
-| 09 Nov 2012 | Dmitry Matveev | Added "FileOut" request and response
+| 09 Nov 2012 | Dmitry Matveev | Added "FileOut" request and response                                |
+| 13 Nov 2012 | Dmitry Matveev | Added "category" option to "CompileClass" request and "Class"       |
+|             |                | response                                                            |
 
 * Overview
 
@@ -267,7 +269,13 @@ Compile a new class. Or recompile it, if the class is already exist.
 *** Syntax
 
 #+BEGIN_EXAMPLE
-  <request id="80" type="CompileClass" superspace="SuperNamespace" super="SuperClassName" namespace="SomeNamespace" class="SomeClass" side="instance">
+  <request id="80" type="CompileClass"
+    superspace="SuperNamespace"
+    super="SuperClassName"
+    namespace="SomeNamespace"
+    class="SomeClass"
+    category="SomeCategory"
+    side="instance">
       <instvar>one</instvar>
       <instvar>two</instvar>
       <instvar>three</instvar>
@@ -284,7 +292,7 @@ Instance variables must be registered in the class in the order specified by
 message.
 
 A class side can also be "compiled", but it is actually a modification, not a
-creation of a new class. So some parameters can be omitted in this case:
+creation of a new class. So some parameters should be omitted in this case:
 
 #+BEGIN_EXAMPLE
   <request id="80" type="CompileClass" namespace="SomeNamespace" class="SomeClass" side="class">
@@ -579,7 +587,10 @@ A class description.
 *** Syntax
 
 #+BEGIN_EXAMPLE
-  <response id="80" type="Class" class="SomeClass" superclass="SuperClass">
+  <response id="80" type="Class"
+    class="SomeClass"
+    superclass="SuperClass"
+    category="SomeCategory">
       <instvar>one</instvar>
       <instvar>two</instvar>
       <instvar>three</instvar>

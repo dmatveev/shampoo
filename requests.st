@@ -159,6 +159,7 @@ class in a namespace'>
                 instvars: class instVarNames asStringArray
                 classvars: class classVarNames asStringArray
                 poolvars: class sharedPools asStringArray
+                category: class category
         ]
     ]
 
@@ -283,7 +284,7 @@ in a concrete class from a concrete namespace.'>
         <category: 'Shampoo-Requests'>
         <comment: 'My instances are used to compile a method in a concrete class from a concrete namespace.'>
 
-        | className superName superSpace spaceName instvars classvars poolvars side |
+        | className superName superSpace spaceName instvars classvars poolvars side category |
 
         CompileClassRequest class >> is: aString [
             <category: 'identification'>
@@ -295,6 +296,9 @@ in a concrete class from a concrete namespace.'>
             | attrs fetchBlock |
             attrs := anXML attrMap.
             side := (attrs at: 'side' ifAbsent: ['instance']) asSymbol.
+
+            side == #instance ifTrue:
+            [category := (attrs at: 'category' ifAbsent: ['Uncategorized'])].
 
             fetchBlock := [:type | (anXML elementsNamed: type) collect:
                                    [:each | each text]].
@@ -330,7 +334,7 @@ in a concrete class from a concrete namespace.'>
                             instanceVariableNames: instvars elementsString
                             classVariableNames: classvars elementsString
                             poolDictionaries: '' " poolvars elementsString "
-                            category: ''.
+                            category: category.
                          ] on: Error do: [:err | error := err].
 
                          Namespace current: currentSpace]

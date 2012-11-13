@@ -248,11 +248,17 @@ class in the concrete namespace. See more in my subclasses.'>
         <category: 'Shampoo-Responses'>
         <comment: 'My instances hold information about a class and its state.'>
 
-        ClassResponse class >> id: anInteger class: aClass superclass: aSuperClass
-                               instvars: anInstVars classvars: aClassVars poolvars: aPoolDicts [
+        ClassResponse class >>
+        id: anInteger class: aClass superclass: aSuperClass
+        instvars: anInstVars classvars: aClassVars poolvars: aPoolDicts
+        category: aString [
             <category: 'instance creation'>
             | obj |
-            obj := self id: anInteger class: aClass attrs: {'superclass' -> aSuperClass}.
+            obj := self
+                id: anInteger
+                class: aClass
+                attrs: {'superclass' -> aSuperClass.
+                        'category'   -> aString}.
             ^(CollectionResponseDecorator on: obj)
                 itemsAt: 'instvar'  put: anInstVars;
                 itemsAt: 'classvar' put: aClassVars;
