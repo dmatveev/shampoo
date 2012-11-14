@@ -32,6 +32,7 @@
   <filein>responses.st</filein>
   <filein>server.st</filein>
   <filein>parser.st</filein>
+  <filein>pretty.st</filein>
 
   <file>xml.st</file>
   <file>hacks.st</file>
@@ -40,6 +41,7 @@
   <file>responses.st</file>
   <file>server.st</file>
   <file>parser.st</file>
+  <file>pretty.st</file>
 
   <test>
     <sunit>Shampoo.LoginTest</sunit>
@@ -63,6 +65,10 @@
     <sunit>Shampoo.ShampooChangeCategoryTest</sunit>
     <sunit>Shampoo.ShampooRemoveCategoryTest</sunit>
     <sunit>Shampoo.RenameCategoryTest</sunit>
+    <sunit>Shampoo.MethodSourcePrettifierTest</sunit>
+    <sunit>Shampoo.ShampooFileOutClassTest</sunit>
+    <sunit>Shampoo.ShampooFileOutClassCategoryTest</sunit>
+    <sunit>Shampoo.ShampooFileOutNamespaceTest</sunit>
     <filein>tests.st</filein>
   </test>
 </package>

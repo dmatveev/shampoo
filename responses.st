@@ -25,6 +25,15 @@ serialize themselves into a network-transfer-friendly format.'>
             ^self shouldNotImplement
         ]
 
+        do: aBlock [
+            "Evaluate a one-argument block, pass self to it.
+             This method is actually a kludge and it will be probably
+             removed later"
+            
+            <category: 'collection'>
+            ^aBlock value: self
+        ]
+
         asXML [
             <category: 'marshalling'>
             ^(ShampooXML.ShNode tagname: 'response')
@@ -75,7 +84,7 @@ an operation. An operation is usually a result of a request execution.'>
 
         OperationalResponse class >> failure: anInteger with: anError [
             <category: 'instance creation'>
-            ^self failure: anInteger text: anError description
+            ^self failure: anInteger text: anError messageText
         ]
 
         OperationalResponse class >> failure: anInteger text: aString [
@@ -117,7 +126,7 @@ an operation. An operation is usually a result of a request execution.'>
         ]
     ]
 
-    Object subclass: AggregatedResponseDecorator [
+    Decorator subclass: CollectionResponseDecorator [
         <category: 'Shampoo-Responses'>
         <comment: 'I am a decorator, a Smalltalk alternative to the multiple
 inheritance. My instances are used to add some additional state and behavior
@@ -126,17 +135,7 @@ be added somewhere in the root of the class (sub)hierarchy, some classes in
 the hierarchy should behave like me, and some should not. That''s why I am
 here.'>
 
-        | items wrapped |
-
-        AggregatedResponseDecorator class >> on: aWrappedObject [
-            <category: 'instance creation'>
-            ^self new on: aWrappedObject
-        ]
-
-        on: aWrappedObject [
-            <category: 'private'>
-            wrapped := aWrappedObject
-        ]
+        | items |
 
         items [
             <category: 'accessors'>
@@ -151,7 +150,7 @@ here.'>
         asXML [
             <category: 'marshalling'>
             | root |
-            root := wrapped asXML.
+            root := self underlyingObject asXML.
 
             self items keysAndValuesDo:
                 [:key :values | values do: [:each |
@@ -162,11 +161,13 @@ here.'>
             ^root
         ]
 
-        doesNotUnderstand: aMessage [
+        do: aBlock [
+            "CollectionResponseDecorator usually wraps Response objects.
+             Response objects partly understand the collection protocol,
+             especially a #do: message. This wrapper does not proxy this
+             message to the underlying object."
             <category: 'decorating'>
-            "Proxy an unknown message to an underlying object"
-            ^wrapped perform: aMessage selector
-                     withArguments: aMessage arguments
+            ^aBlock value: self
         ]
     ]
 
@@ -176,7 +177,7 @@ here.'>
 
         NamespacesResponse class >> id: anInteger names: anArray [
             <category: 'instance creation'>
-            ^(AggregatedResponseDecorator on: (self id: anInteger))
+            ^(CollectionResponseDecorator on: (self id: anInteger))
                 itemsAt: 'namespace' put: anArray;
                 yourself
         ]
@@ -194,7 +195,7 @@ namespace.'>
 
         ClassesResponse class >> id: anInteger names: anArray [
             <category: 'instance creation'>
-            ^(AggregatedResponseDecorator on: (self id: anInteger))
+            ^(CollectionResponseDecorator on: (self id: anInteger))
                 itemsAt: 'class' put: anArray;
                 yourself
         ]
@@ -247,12 +248,18 @@ class in the concrete namespace. See more in my subclasses.'>
         <category: 'Shampoo-Responses'>
         <comment: 'My instances hold information about a class and its state.'>
 
-        ClassResponse class >> id: anInteger class: aClass superclass: aSuperClass
-                               instvars: anInstVars classvars: aClassVars poolvars: aPoolDicts [
+        ClassResponse class >>
+        id: anInteger class: aClass superclass: aSuperClass
+        instvars: anInstVars classvars: aClassVars poolvars: aPoolDicts
+        category: aString [
             <category: 'instance creation'>
             | obj |
-            obj := self id: anInteger class: aClass attrs: {'superclass' -> aSuperClass}.
-            ^(AggregatedResponseDecorator on: obj)
+            obj := self
+                id: anInteger
+                class: aClass
+                attrs: {'superclass' -> aSuperClass.
+                        'category'   -> aString}.
+            ^(CollectionResponseDecorator on: obj)
                 itemsAt: 'instvar'  put: anInstVars;
                 itemsAt: 'classvar' put: aClassVars;
                 itemsAt: 'poolvar'  put: aPoolDicts;
@@ -271,7 +278,7 @@ class in the concrete namespace. See more in my subclasses.'>
 
         MethodCategoriesResponse class >> id: anInteger class: aClass categories: anArray [
             <category: 'instance creation'>
-            ^(AggregatedResponseDecorator on: (self id: anInteger class: aClass))
+            ^(CollectionResponseDecorator on: (self id: anInteger class: aClass))
                 itemsAt: 'category' put: anArray;
                 yourself
         ]
@@ -289,7 +296,7 @@ of the concrete class'>
         
         MethodsResponse class >> id: anInteger class: aClass methods: anArray [
             <category: 'instance creation'>
-            ^(AggregatedResponseDecorator on: (self id: anInteger class: aClass))
+            ^(CollectionResponseDecorator on: (self id: anInteger class: aClass))
                 itemsAt: 'method' put: anArray;
                 yourself
         ]
@@ -317,7 +324,7 @@ concrete class'>
         method: aNameString methodSource: aSourceString [
             <category: 'private'>
             methodName := aNameString.
-            methodSource := aSourceString
+            methodSource := PrettyPrinter prettifyMethod: aSourceString
         ]
 
         type [
@@ -433,6 +440,64 @@ a client for password encryption during the authentication.'>
             ^(super asXML)
                 addNode: (ShampooXML.ShText text: number printString);
                 yourself
+        ]
+    ]
+
+    Response subclass: FileOutResponse [
+        | isLast xml |
+
+        FileOutResponse class >>
+        id: anInteger class: aClassName source: aString [
+            <category: 'instance creation'>
+            ^(self id: anInteger)
+                class: aClassName source: aString;
+                yourself
+        ]
+
+        FileOutResponse class >>
+        id: anInteger category: aCategory source: aString [
+            <category: 'instance creation'>
+            ^(self id: anInteger)
+                category: aCategory source: aString;
+                yourself
+        ]
+
+        class: aClassName source: aString [
+            <category: 'private'>
+            xml := super asXML.
+            xml addAttribute: 'class' value: aClassName;
+                addNode: (ShampooXML.ShText text: aString)
+        ]
+
+        category: aCategory source: aString [
+            <category: 'private'>
+            xml := super asXML.
+            xml addAttribute: 'category' value: aCategory;
+                addNode: (ShampooXML.ShText text: aString)
+        ]
+
+        isLast [
+            <category: 'accessors'>
+            ^isLast ifNil: [isLast := false]
+        ]
+
+        isLast: aBoolean [
+            <category: 'accessors'>
+            isLast := aBoolean
+        ]
+
+        type [
+            <category: 'private'>
+            ^'FileOut'
+        ]
+
+        asXML [
+            <category: 'marshalling'>
+            | r |
+            r := xml copy.
+            self isLast ifTrue:
+            [r addAttribute: 'last' value: 'true'].
+            ^r
         ]
     ]
 ]
