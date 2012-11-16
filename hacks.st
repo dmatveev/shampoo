@@ -13,9 +13,7 @@ Object extend [
 Collection extend [
     elementsString [
         <category: '*shampoo-hacks'>
-        ^self isEmpty
-            ifTrue: ['']
-            ifFalse: [self fold: [:a :b | a, ' ', b]]
+        ^String join: self separatedBy: ' '
     ]
 
     asStringArray [
@@ -113,6 +111,16 @@ String extend [
     isClosingBracket [
         <category: '*shampoo-hacks'>
         ^self trimSeparators = ']'
+    ]
+]
+
+PackageLoader class extend [
+    reloadPackage: aPackageName [
+        <category: '*shampoo-hacks'>
+        | base |
+        base := PackageLoader directoryFor: aPackageName.
+        (PackageLoader fileInsFor: aPackageName) do:
+        [:e | FileStream fileIn: (base / e) file name].
     ]
 ]
 

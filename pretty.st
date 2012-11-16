@@ -281,8 +281,8 @@ Namespace current: Shampoo [
             | prettified |
             prettified := aCollectionOfClasses collect:
             [:each | self prettifyClass: each].
-            
-            ^prettified fold: [:first :second | first, second]
+
+            ^String join: prettified
         ]
     ]
 
