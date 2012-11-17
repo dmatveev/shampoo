@@ -378,8 +378,8 @@ method in the concrete class at the concrete namespace.'>
             class := (Smalltalk at: spaceName asSymbol) at: className asSymbol.
             (side = #class) ifTrue: [class := class class].
 
-            [method := class compile: source]
-            on: Error do: [:err | ^self fail: err].
+            method := class compile: source ifError:
+            [:filename :linenum :errdesc | ^self failWith: errdesc].
 
             (cat ~= '*')
             & (method descriptor category ~= cat)
@@ -387,6 +387,14 @@ method in the concrete class at the concrete namespace.'>
             ifTrue: [method descriptor category: cat].
             
             ^OperationalResponse success: id
+        ]
+
+        failWith: aString [
+            <category: 'execution'>
+            | err | 
+            err := Error new.
+            err messageText: aString.
+            ^self fail: err
         ]
 
         fail: anError [
